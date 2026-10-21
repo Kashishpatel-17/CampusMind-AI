@@ -1,0 +1,30 @@
+[
+  {
+    "id": 1778395147395,
+    "full_name": "Kashish Manoj Patel",
+    "email": "kp.patel1707@gmail.com",
+    "password": "$2b$10$R4/kFrAP7KpgonvInDewwOIYwB4nVKR80isr37Wdt8rLHjlxArBq2",
+    "department": "Computer Science",
+    "subject": "Machine Learning"
+  },
+  {
+    "id": 1778398634983,
+    "full_name": "jhope",
+    "email": "jhope@gmail.com",
+    "password": "$2b$10$TCkr67i2FuBvjYC/HjlOvORvJZxB6ZrPd6PKVvQ9jOYqZ0Rjl0MRO",
+    "department": "AI&DS",
+    "subject": "Artificial Inteligence"
+  },
+  {
+    "id": 1778474921891,
+    "full_name": "shreya diddi",
+    "email": "shreya@gmail.com",
+    "password": "$2b$10$RdR6i2juHrTIIBP3IparPuqyi8x1VXP8.DJdJVCtk7B/luaPa53Mi"
+  },
+  {
+    "id": 1778483503714,
+    "full_name": "Shruti Patel",
+    "email": "shruti@gmail.com",
+    "password": "$2b$10$lVFVTZM93i64DnkRxU1Pr.PryC0HMDXxaJdq.nUSNCcvzb78c8iKS"
+  }
+]

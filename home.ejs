@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusMind AI — Smart Education Platform</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream:     #faf8f4;
+  --paper:     #f4f1eb;
+  --sand:      #e8e2d9;
+  --stone:     #c4bdb4;
+  --ink:       #1c1916;
+  --ink-mid:   #3d3a36;
+  --ink-light: #7a736b;
+  --teal:      #2a7a6f;
+  --teal-light:#3a9b8e;
+  --teal-pale: #e4f0ef;
+  --amber:     #c8742a;
+  --amber-pale:#fdf3e8;
+  --slate:     #3a4a5c;
+  --slate-pale:#edf1f5;
+  --r: 20px;
+  --r-lg: 28px;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0; opacity: 0.5;
+}
+
+/* ═══ NAV ═══ */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+  padding: 0 60px;
+  height: 68px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(250,248,244,0.88);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--sand);
+}
+.nav-logo {
+  font-family: 'Playfair Display', serif;
+  font-size: 21px; font-weight: 700; color: var(--ink);
+  letter-spacing: -0.5px;
+}
+.nav-logo span { color: var(--teal); }
+.nav-links {
+  display: flex; gap: 36px; list-style: none;
+}
+.nav-links a {
+  font-size: 14px; font-weight: 400; color: var(--ink-light);
+  text-decoration: none; letter-spacing: 0.2px;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--ink); }
+.nav-actions { display: flex; gap: 10px; }
+.nav-btn {
+  padding: 8px 20px; border-radius: 8px; font-size: 13px;
+  font-weight: 500; text-decoration: none; font-family: 'Outfit', sans-serif;
+  transition: all 0.2s; cursor: pointer; border: none;
+}
+.nav-btn-ghost {
+  background: transparent; color: var(--ink-mid);
+  border: 1px solid var(--sand);
+}
+.nav-btn-ghost:hover { background: var(--paper); border-color: var(--stone); }
+.nav-btn-fill {
+  background: var(--teal); color: #fff;
+  border: 1px solid var(--teal);
+}
+.nav-btn-fill:hover { background: var(--teal-light); }
+
+/* ═══ HERO ═══ */
+.hero {
+  position: relative; z-index: 1;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; text-align: center;
+  padding: 130px 24px 80px;
+  overflow: hidden;
+}
+
+/* Decorative circles */
+.hero-circle-1 {
+  position: absolute; width: 520px; height: 520px; border-radius: 50%;
+  border: 1px solid var(--sand); top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: slowSpin 60s linear infinite;
+}
+.hero-circle-2 {
+  position: absolute; width: 360px; height: 360px; border-radius: 50%;
+  border: 1px dashed var(--stone); top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  animation: slowSpin 40s linear infinite reverse;
+}
+.hero-dot {
+  position: absolute; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--teal); opacity: 0.35; pointer-events: none;
+}
+.hero-dot:nth-child(3)  { top: 22%; left: 18%; animation: floatDot 6s ease-in-out infinite; }
+.hero-dot:nth-child(4)  { top: 30%; right: 16%; animation: floatDot 8s ease-in-out infinite 1s; }
+.hero-dot:nth-child(5)  { bottom: 25%; left: 22%; animation: floatDot 7s ease-in-out infinite 2s; }
+.hero-dot:nth-child(6)  { bottom: 20%; right: 20%; animation: floatDot 9s ease-in-out infinite 0.5s; background: var(--amber); }
+
+@keyframes slowSpin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes floatDot {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 500; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--teal);
+  background: var(--teal-pale); border-radius: 50px;
+  padding: 6px 16px; margin-bottom: 32px;
+  animation: fadeUp 0.8s both;
+  position: relative; z-index: 1;
+}
+.eyebrow-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--teal); animation: pulse 2s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1);} 50%{opacity:0.5;transform:scale(0.8);} }
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(46px, 7.5vw, 92px);
+  font-weight: 700; line-height: 1.04; letter-spacing: -2.5px;
+  color: var(--ink); margin-bottom: 12px;
+  animation: fadeUp 0.8s 0.1s both;
+  position: relative; z-index: 1;
+}
+.hero h1 em {
+  font-style: italic; color: var(--teal);
+}
+.hero h1 .word-stroke {
+  -webkit-text-stroke: 2px var(--ink);
+  color: transparent;
+}
+
+.hero-rule {
+  width: 56px; height: 2px; background: var(--stone);
+  margin: 28px auto; border-radius: 2px;
+  animation: fadeUp 0.8s 0.2s both;
+  position: relative; z-index: 1;
+}
+
+.hero-sub {
+  font-size: clamp(15px, 1.9vw, 18px); color: var(--ink-light);
+  max-width: 520px; line-height: 1.72; margin-bottom: 52px;
+  font-weight: 300;
+  animation: fadeUp 0.8s 0.25s both;
+  position: relative; z-index: 1;
+}
+
+.hero-pills {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;
+  margin-bottom: 52px;
+  animation: fadeUp 0.8s 0.3s both;
+  position: relative; z-index: 1;
+}
+.pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 16px; border-radius: 50px; font-size: 13px; font-weight: 400;
+  border: 1px solid var(--sand); background: var(--paper);
+  color: var(--ink-mid);
+}
+.pill-icon { font-size: 14px; }
+
+.hero-cta {
+  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.8s 0.35s both;
+  position: relative; z-index: 1;
+}
+.cta-main {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 32px; border-radius: var(--r); font-size: 15px;
+  font-weight: 600; text-decoration: none; font-family: 'Outfit', sans-serif;
+  transition: all 0.25s; cursor: pointer; border: none;
+  letter-spacing: 0.1px;
+}
+.cta-student {
+  background: var(--teal); color: #fff;
+  box-shadow: 0 4px 24px rgba(42,122,111,0.25);
+}
+.cta-student:hover { background: var(--teal-light); box-shadow: 0 8px 32px rgba(42,122,111,0.35); transform: translateY(-2px); }
+.cta-teacher {
+  background: var(--paper); color: var(--ink-mid);
+  border: 1px solid var(--sand);
+}
+.cta-teacher:hover { background: var(--sand); transform: translateY(-2px); }
+
+.hero-scroll {
+  position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+  font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--stone); display: flex; flex-direction: column; align-items: center; gap: 8px;
+  z-index: 1; animation: fadeUp 0.8s 0.6s both;
+}
+.scroll-line {
+  width: 1px; height: 36px; background: linear-gradient(to bottom, var(--stone), transparent);
+  animation: scrollPulse 2s ease-in-out infinite;
+}
+@keyframes scrollPulse { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ SECTION COMMONS ═══ */
+section { position: relative; z-index: 1; }
+.section-wrap { max-width: 1040px; margin: 0 auto; padding: 0 32px; }
+.section-header { text-align: center; margin-bottom: 60px; }
+.s-eyebrow {
+  display: inline-block; font-size: 11px; font-weight: 600;
+  letter-spacing: 2.5px; text-transform: uppercase; color: var(--teal);
+  margin-bottom: 14px;
+}
+.s-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(28px, 4vw, 42px); font-weight: 700;
+  color: var(--ink); letter-spacing: -1px; line-height: 1.15;
+}
+.s-title em { font-style: italic; color: var(--teal); }
+.s-desc {
+  margin-top: 14px; font-size: 15px; color: var(--ink-light);
+  font-weight: 300; line-height: 1.65; max-width: 480px; margin-left: auto; margin-right: auto;
+}
+
+/* ═══ PORTALS ═══ */
+.portals-section { padding: 100px 0 80px; }
+.portals-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+}
+.portal-card {
+  border-radius: var(--r-lg); padding: 44px 40px;
+  border: 1px solid var(--sand);
+  position: relative; overflow: hidden;
+  transition: transform 0.3s, box-shadow 0.3s;
+  background: var(--paper);
+}
+.portal-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 60px rgba(28,25,22,0.09);
+}
+.portal-card.teacher-card { background: linear-gradient(140deg, #f0f4ff 0%, #e8ecf8 100%); border-color: #d4daf0; }
+.portal-card.student-card { background: linear-gradient(140deg, #e8f5f3 0%, #ddf0ec 100%); border-color: #c2ddd9; }
+
+.card-stripe {
+  position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.teacher-stripe { background: linear-gradient(90deg, #4a6cf7, #8b5cf6); }
+.student-stripe  { background: linear-gradient(90deg, #2a7a6f, #06b6d4); }
+
+.card-icon {
+  width: 60px; height: 60px; border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin-bottom: 22px;
+}
+.teacher-card .card-icon { background: rgba(74,108,247,0.12); }
+.student-card .card-icon  { background: rgba(42,122,111,0.12); }
+
+.card-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 24px; font-weight: 700; color: var(--ink);
+  margin-bottom: 10px; letter-spacing: -0.5px;
+}
+.card-desc {
+  font-size: 14px; color: var(--ink-light); line-height: 1.65;
+  font-weight: 300; margin-bottom: 28px;
+}
+.card-features { list-style: none; }
+.card-features li {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13.5px; color: var(--ink-mid); padding: 8px 0;
+  border-bottom: 1px solid rgba(28,25,22,0.06);
+}
+.card-features li:last-child { border-bottom: none; }
+.feat-check {
+  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-weight: 700;
+}
+.teacher-card .feat-check { background: rgba(74,108,247,0.15); color: #4a6cf7; }
+.student-card .feat-check  { background: rgba(42,122,111,0.15); color: var(--teal); }
+
+/* ═══ SOFT SKILL ═══ */
+.softskill-section { padding: 80px 0 80px; }
+.softskill-inner {
+  border-radius: var(--r-lg); overflow: hidden;
+  border: 1px solid var(--sand); background: var(--paper);
+  display: grid; grid-template-columns: 1fr 1fr;
+}
+.ss-left {
+  padding: 60px 52px;
+  background: linear-gradient(145deg, #1c3a36 0%, #2a5a52 100%);
+  position: relative; overflow: hidden;
+}
+.ss-left::before {
+  content: '';
+  position: absolute; width: 300px; height: 300px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.07);
+  bottom: -80px; right: -80px; pointer-events: none;
+}
+.ss-left::after {
+  content: '';
+  position: absolute; width: 180px; height: 180px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.05);
+  top: -50px; left: -50px; pointer-events: none;
+}
+.ss-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 50px; padding: 5px 14px; font-size: 11px;
+  font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.8); margin-bottom: 24px;
+}
+.ss-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 34px; font-weight: 700; color: #fff;
+  line-height: 1.18; letter-spacing: -1px; margin-bottom: 16px;
+}
+.ss-title em { font-style: italic; color: #7de8d8; }
+.ss-desc {
+  font-size: 14.5px; color: rgba(255,255,255,0.65); line-height: 1.7;
+  font-weight: 300; margin-bottom: 36px;
+}
+.ss-metrics {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 36px;
+}
+.ss-metric {
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px; padding: 16px;
+}
+.ss-metric-val {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px; font-weight: 700; color: #7de8d8;
+  line-height: 1; margin-bottom: 4px;
+}
+.ss-metric-name { font-size: 11px; color: rgba(255,255,255,0.55); font-weight: 400; letter-spacing: 0.3px; }
+.ss-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: #fff; color: var(--teal);
+  padding: 12px 26px; border-radius: var(--r); font-size: 14px;
+  font-weight: 600; text-decoration: none; transition: all 0.25s;
+}
+.ss-cta:hover { background: var(--teal-pale); transform: translateX(4px); }
+.ss-cta-arrow { transition: transform 0.25s; }
+.ss-cta:hover .ss-cta-arrow { transform: translateX(4px); }
+
+.ss-right { padding: 52px 48px; background: #fff; }
+.ss-right-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px; font-weight: 600; color: var(--ink);
+  margin-bottom: 28px; letter-spacing: -0.4px;
+}
+.skill-rows { display: flex; flex-direction: column; gap: 18px; }
+.skill-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 7px;
+}
+.skill-name { font-size: 13px; font-weight: 500; color: var(--ink-mid); }
+.skill-pct  { font-size: 12px; color: var(--ink-light); }
+.skill-bar-bg {
+  height: 6px; background: var(--paper); border-radius: 3px; overflow: hidden;
+}
+.skill-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: linear-gradient(90deg, var(--teal), #34d399);
+  transition: width 1.2s ease;
+}
+.skill-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 28px; }
+.skill-tag {
+  padding: 5px 13px; border-radius: 50px; font-size: 12px; font-weight: 400;
+  background: var(--teal-pale); color: var(--teal); border: 1px solid rgba(42,122,111,0.2);
+}
+
+/* ═══ FEATURES ═══ */
+.features-section { padding: 80px 0; }
+.features-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px;
+}
+.feat-card {
+  background: var(--paper); border: 1px solid var(--sand);
+  border-radius: var(--r); padding: 32px 28px;
+  transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+  position: relative; overflow: hidden;
+}
+.feat-card::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+  border-radius: 0 0 var(--r) var(--r);
+  background: linear-gradient(90deg, var(--teal), #34d399);
+  transform: scaleX(0); transform-origin: left; transition: transform 0.3s;
+}
+.feat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(28,25,22,0.08); border-color: var(--stone); }
+.feat-card:hover::after { transform: scaleX(1); }
+.feat-icon {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; margin-bottom: 18px;
+  background: var(--cream);
+}
+.feat-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px; font-weight: 600; color: var(--ink);
+  margin-bottom: 9px; letter-spacing: -0.3px;
+}
+.feat-text { font-size: 13.5px; color: var(--ink-light); line-height: 1.65; font-weight: 300; }
+
+/* ═══ HOW IT WORKS ═══ */
+.how-section { padding: 80px 0; background: var(--paper); }
+.how-steps {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 0; position: relative;
+}
+.how-steps::before {
+  content: ''; position: absolute; top: 28px; left: 14%; right: 14%; height: 1px;
+  background: var(--sand); z-index: 0;
+}
+.how-step { text-align: center; padding: 0 16px; position: relative; z-index: 1; }
+.step-num {
+  width: 56px; height: 56px; border-radius: 50%;
+  border: 1.5px solid var(--sand); background: var(--cream);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600;
+  color: var(--teal); margin: 0 auto 18px;
+  transition: all 0.25s;
+}
+.how-step:hover .step-num {
+  background: var(--teal); color: #fff; border-color: var(--teal);
+  box-shadow: 0 6px 20px rgba(42,122,111,0.3);
+}
+.step-name { font-size: 15px; font-weight: 500; color: var(--ink); margin-bottom: 6px; }
+.step-desc { font-size: 13px; color: var(--ink-light); line-height: 1.6; font-weight: 300; }
+
+/* ═══ RESUME ANALYZER ═══ */
+.resume-section { padding: 80px 0; }
+.resume-inner {
+  border-radius: var(--r-lg); background: linear-gradient(135deg, #fdf8f0 0%, #fef3e2 100%);
+  border: 1px solid #e8d8c0; padding: 64px 60px;
+  display: grid; grid-template-columns: 1.1fr 1fr; gap: 60px; align-items: center;
+}
+.resume-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--amber-pale); border: 1px solid rgba(200,116,42,0.2);
+  border-radius: 50px; padding: 5px 14px; font-size: 11px;
+  font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 22px;
+}
+.resume-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 36px; font-weight: 700; color: var(--ink);
+  line-height: 1.16; letter-spacing: -1px; margin-bottom: 16px;
+}
+.resume-title em { font-style: italic; color: var(--amber); }
+.resume-desc {
+  font-size: 15px; color: var(--ink-light); line-height: 1.7;
+  font-weight: 300; margin-bottom: 30px;
+}
+.resume-bullets { list-style: none; margin-bottom: 36px; }
+.resume-bullets li {
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 14px; color: var(--ink-mid); padding: 7px 0;
+  border-bottom: 1px solid rgba(200,116,42,0.1);
+}
+.resume-bullets li:last-child { border-bottom: none; }
+.rb-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--amber); flex-shrink: 0; margin-top: 6px;
+}
+.resume-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--amber); color: #fff;
+  padding: 13px 28px; border-radius: var(--r); font-size: 14px;
+  font-weight: 600; text-decoration: none; transition: all 0.25s;
+  box-shadow: 0 4px 20px rgba(200,116,42,0.28);
+}
+.resume-cta:hover { background: #b5651e; transform: translateY(-2px); box-shadow: 0 8px 28px rgba(200,116,42,0.36); }
+
+.ats-card {
+  background: #fff; border: 1px solid #e8d8c0; border-radius: var(--r);
+  padding: 28px; box-shadow: 0 8px 32px rgba(28,25,22,0.07);
+}
+.ats-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 22px;
+}
+.ats-label { font-size: 12px; font-weight: 500; color: var(--ink-light); letter-spacing: 0.5px; }
+.ats-score-badge {
+  width: 68px; height: 68px; border-radius: 50%;
+  border: 3px solid var(--amber); display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+.ats-score-num {
+  font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: var(--amber); line-height: 1;
+}
+.ats-score-sub { font-size: 9px; color: var(--ink-light); }
+.ats-skills { margin-bottom: 18px; }
+.ats-skill-row { margin-bottom: 12px; }
+.ats-skill-head { display: flex; justify-content: space-between; margin-bottom: 5px; }
+.ats-skill-name { font-size: 12px; color: var(--ink-mid); }
+.ats-skill-pct { font-size: 11px; color: var(--ink-light); }
+.ats-bar-bg { height: 5px; background: #f5ede0; border-radius: 3px; overflow: hidden; }
+.ats-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--amber), #f59e0b); }
+.ats-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.ats-badge {
+  padding: 3px 10px; border-radius: 50px; font-size: 11px;
+}
+.ats-matched { background: #e8f5e9; color: #2e7d32; }
+.ats-missing { background: #ffebee; color: #c62828; }
+.ats-extra   { background: #e8eaf6; color: #3949ab; }
+
+/* ═══ CTA SECTION ═══ */
+.cta-section { padding: 80px 0 100px; }
+.cta-inner {
+  border-radius: var(--r-lg); background: var(--ink);
+  padding: 72px 60px; text-align: center; position: relative; overflow: hidden;
+}
+.cta-inner::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 70% 60% at 50% -10%, rgba(42,122,111,0.35), transparent);
+  pointer-events: none;
+}
+.cta-inner::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 50% 40% at 80% 110%, rgba(200,116,42,0.18), transparent);
+  pointer-events: none;
+}
+.cta-eyebrow {
+  display: inline-block; font-size: 11px; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase; color: #7de8d8;
+  margin-bottom: 18px; position: relative;
+}
+.cta-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(30px, 4.5vw, 52px); font-weight: 700; color: #fff;
+  letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 16px; position: relative;
+}
+.cta-title em { font-style: italic; color: #7de8d8; }
+.cta-sub {
+  font-size: 16px; color: rgba(255,255,255,0.55); margin-bottom: 48px;
+  font-weight: 300; position: relative;
+}
+.cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; position: relative; }
+.cta-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 14px 30px; border-radius: var(--r); font-size: 15px;
+  font-weight: 600; text-decoration: none; transition: all 0.25s; font-family: 'Outfit', sans-serif;
+}
+.cta-btn-student {
+  background: var(--teal); color: #fff;
+  box-shadow: 0 4px 24px rgba(42,122,111,0.4);
+}
+.cta-btn-student:hover { background: var(--teal-light); transform: translateY(-2px); }
+.cta-btn-teacher {
+  background: rgba(255,255,255,0.1); color: #fff;
+  border: 1px solid rgba(255,255,255,0.18);
+}
+.cta-btn-teacher:hover { background: rgba(255,255,255,0.18); transform: translateY(-2px); }
+.cta-or { color: rgba(255,255,255,0.3); font-size: 13px; display: flex; align-items: center; }
+
+/* ═══ FOOTER ═══ */
+footer {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--sand);
+  padding: 28px 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 13px; color: var(--ink-light);
+  background: var(--paper);
+}
+.footer-logo {
+  font-family: 'Playfair Display', serif; font-size: 16px; font-weight: 600;
+  color: var(--ink); letter-spacing: -0.3px;
+}
+.footer-logo span { color: var(--teal); }
+.footer-links { display: flex; gap: 24px; }
+.footer-links a { color: var(--ink-light); text-decoration: none; font-size: 13px; transition: color 0.2s; }
+.footer-links a:hover { color: var(--ink); }
+
+/* ═══ OBSERVER ANIMATION ═══ */
+.reveal {
+  opacity: 0; transform: translateY(32px);
+  transition: opacity 0.75s ease, transform 0.75s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 900px) {
+  nav { padding: 0 20px; }
+  .nav-links { display: none; }
+  .portals-grid { grid-template-columns: 1fr; }
+  .softskill-inner { grid-template-columns: 1fr; }
+  .features-grid { grid-template-columns: 1fr 1fr; }
+  .how-steps { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .how-steps::before { display: none; }
+  .resume-inner { grid-template-columns: 1fr; padding: 44px 32px; }
+  .cta-inner { padding: 52px 28px; }
+  footer { padding: 24px 20px; flex-direction: column; gap: 12px; text-align: center; }
+}
+@media (max-width: 600px) {
+  .features-grid { grid-template-columns: 1fr; }
+  .how-steps { grid-template-columns: 1fr; }
+  .ss-metrics { grid-template-columns: 1fr 1fr; }
+  .hero h1 { letter-spacing: -1.5px; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">CampusMind <span>AI</span></div>
+  <ul class="nav-links">
+    <li><a href="#portals">Portals</a></li>
+    <li><a href="#soft-skill">Soft Skills</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#resume">Resume AI</a></li>
+    <li><a href="#get-started">Get Started</a></li>
+  </ul>
+  <div class="nav-actions">
+    <a href="/login" class="nav-btn nav-btn-ghost">Teacher Login</a>
+    <a href="/student/login" class="nav-btn nav-btn-fill">Student Login</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-circle-1"></div>
+  <div class="hero-circle-2"></div>
+  <div class="hero-dot"></div>
+  <div class="hero-dot"></div>
+  <div class="hero-dot"></div>
+  <div class="hero-dot"></div>
+
+  <div class="hero-eyebrow">
+    <span class="eyebrow-dot"></span>
+    Smart Education Platform — Now Live
+  </div>
+
+  <h1>
+    Where Academia<br>
+    Meets <em>Intelligence.</em>
+  </h1>
+
+  <div class="hero-rule"></div>
+
+  <p class="hero-sub">
+    CampusMind AI unifies teacher and student workflows — from attendance to assignments — and adds AI-powered soft skill analysis and resume scoring to prepare students for the real world.
+  </p>
+
+  <div class="hero-pills">
+    <span class="pill"><span class="pill-icon"></span> Teacher Portal</span>
+    <span class="pill"><span class="pill-icon"></span> Student Portal</span>
+    <span class="pill"><span class="pill-icon"></span> Soft Skill AI</span>
+    <span class="pill"><span class="pill-icon"></span> Resume Analyzer</span>
+  </div>
+
+  <div class="hero-cta">
+    <a href="/student/register" class="cta-main cta-student"> &nbsp; I'm a Student</a>
+    <a href="/register" class="cta-main cta-teacher">&nbsp; I'm a Teacher</a>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-line"></div>
+    Scroll
+  </div>
+</section>
+
+<!-- PORTALS -->
+<section class="portals-section" id="portals">
+  <div class="section-wrap">
+    <div class="section-header reveal">
+      <div class="s-eyebrow">Two Dedicated Portals</div>
+      <h2 class="s-title">Built for <em>Every Role</em></h2>
+      <p class="s-desc">One login for teachers, one for students — each with exactly the tools they need, nothing they don't.</p>
+    </div>
+    <div class="portals-grid">
+      <div class="portal-card teacher-card reveal reveal-delay-1">
+        <div class="card-stripe teacher-stripe"></div>
+        <div class="card-icon">🧑‍🏫</div>
+        <div class="card-title">Teacher Portal</div>
+        <p class="card-desc">A complete control centre for educators. Manage classes, track every student's journey, and deliver assignments with ease.</p>
+        <ul class="card-features">
+          <li><span class="feat-check">✓</span> Create & manage multiple class sections</li>
+          <li><span class="feat-check">✓</span> Upload assignments with file attachments</li>
+          <li><span class="feat-check">✓</span> Record and review student attendance</li>
+          <li><span class="feat-check">✓</span> Enter and update marks per subject & exam type</li>
+          <li><span class="feat-check">✓</span> Log and track student behavior incidents</li>
+          <li><span class="feat-check">✓</span> Receive notifications on student submissions</li>
+        </ul>
+      </div>
+      <div class="portal-card student-card reveal reveal-delay-2">
+        <div class="card-stripe student-stripe"></div>
+        <div class="card-icon">🎓</div>
+        <div class="card-title">Student Portal</div>
+        <p class="card-desc">Your personal academic hub. Access assignments, track your record, and supercharge your career with AI-powered tools.</p>
+        <ul class="card-features">
+          <li><span class="feat-check">✓</span> View all assignments posted by teachers</li>
+          <li><span class="feat-check">✓</span> Submit assignments with file uploads</li>
+          <li><span class="feat-check">✓</span> Get instant notifications for new assignments</li>
+          <li><span class="feat-check">✓</span> Monitor attendance and academic performance</li>
+          <li><span class="feat-check">✓</span> AI Soft Skill Analyzer — analyse your video</li>
+          <li><span class="feat-check">✓</span> ATS Resume Analyzer — career readiness tool</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOFT SKILL ANALYZER -->
+<section class="softskill-section" id="soft-skill">
+  <div class="section-wrap">
+    <div class="softskill-inner reveal">
+      <!-- LEFT: Dark hero -->
+      <div class="ss-left">
+        <div class="ss-tag"> &nbsp; AI-Powered</div>
+        <div class="ss-title">Analyse Your<br><em>Soft Skills</em><br>Objectively.</div>
+        <p class="ss-desc">
+          Upload a video of your presentation and our multi-modal AI — powered by Whisper, spaCy, MediaPipe and librosa — breaks down exactly how you communicate, in under 90 seconds.
+        </p>
+        <div class="ss-metrics">
+          <div class="ss-metric">
+            <div class="ss-metric-val">6</div>
+            <div class="ss-metric-name">Skills Scored</div>
+          </div>
+          <div class="ss-metric">
+            <div class="ss-metric-val">&lt;90s</div>
+            <div class="ss-metric-name">Analysis Time</div>
+          </div>
+          <div class="ss-metric">
+            <div class="ss-metric-val">AI</div>
+            <div class="ss-metric-name">Coach Feedback</div>
+          </div>
+          <div class="ss-metric">
+            <div class="ss-metric-val">100%</div>
+            <div class="ss-metric-name">Objective Score</div>
+          </div>
+        </div>
+        <a href="/student/login" class="ss-cta">
+          Try it now <span class="ss-cta-arrow">→</span>
+        </a>
+      </div>
+
+      <!-- RIGHT: Skill demo -->
+      <div class="ss-right">
+        <div class="ss-right-title">What gets measured</div>
+        <div class="skill-rows">
+          <div class="skill-row">
+            <div class="skill-head"><span class="skill-name">Grammar & Language</span><span class="skill-pct">20%</span></div>
+            <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:82%;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span class="skill-name">Eye Contact</span><span class="skill-pct">20%</span></div>
+            <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:74%;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span class="skill-name">Vocabulary & Diversity</span><span class="skill-pct">15%</span></div>
+            <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:68%;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span class="skill-name">Fluency & Speaking Rate</span><span class="skill-pct">15%</span></div>
+            <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:88%;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span class="skill-name">Confidence & Pitch</span><span class="skill-pct">15%</span></div>
+            <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:62%;"></div></div>
+          </div>
+          <div class="skill-row">
+            <div class="skill-head"><span class="skill-name">Filler Words</span><span class="skill-pct">15%</span></div>
+            <div class="skill-bar-bg"><div class="skill-bar-fill" style="width:79%;"></div></div>
+          </div>
+        </div>
+        <div class="skill-tags">
+          <span class="skill-tag">Whisper ASR</span>
+          <span class="skill-tag">spaCy NLP</span>
+          <span class="skill-tag">MediaPipe Vision</span>
+          <span class="skill-tag">librosa Audio</span>
+          <span class="skill-tag">AI Coach Report</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features-section" id="features">
+  <div class="section-wrap">
+    <div class="section-header reveal">
+      <div class="s-eyebrow">What's Inside</div>
+      <h2 class="s-title">Everything You <em>Need</em></h2>
+      <p class="s-desc">Every tool built with one philosophy — make academic life simpler and outcomes better.</p>
+    </div>
+    <div class="features-grid">
+      <div class="feat-card reveal">
+        <div class="feat-icon">📕</div>
+        <div class="feat-name">Assignment Management</div>
+        <p class="feat-text">Teachers post assignments with deadlines and file attachments. Students submit digitally — no emails, no confusion.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon">📈</div>
+        <div class="feat-name">Attendance Tracking</div>
+        <p class="feat-text">Mark attendance class-by-class with notes. Students monitor their own percentage and stay on track.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon">🔢</div>
+        <div class="feat-name">Marks & Grades</div>
+        <p class="feat-text">Enter marks by exam type — unit test, midterm, final. Results instantly appear on student dashboards.</p>
+      </div>
+      <div class="feat-card reveal">
+        <div class="feat-icon">🎯</div>
+        <div class="feat-name">Behavior Tracking</div>
+        <p class="feat-text">Log behavior observations and actions taken. A clear, digital record replaces scattered notes.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-1">
+        <div class="feat-icon">🔔</div>
+        <div class="feat-name">Two-Way Notifications</div>
+        <p class="feat-text">Students are notified when assignments are posted. Teachers are alerted the moment a student submits.</p>
+      </div>
+      <div class="feat-card reveal reveal-delay-2">
+        <div class="feat-icon">🔐</div>
+        <div class="feat-name">Secure Authentication</div>
+        <p class="feat-text">Separate portals for teachers and students with bcrypt password hashing and session-based security.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-wrap">
+    <div class="section-header reveal">
+      <div class="s-eyebrow">Simple to Start</div>
+      <h2 class="s-title">Up & Running <em>in Minutes</em></h2>
+    </div>
+    <div class="how-steps">
+      <div class="how-step reveal">
+        <div class="step-num">1</div>
+        <div class="step-name">Register</div>
+        <p class="step-desc">Create your teacher or student account with your details in under 2 minutes</p>
+      </div>
+      <div class="how-step reveal reveal-delay-1">
+        <div class="step-num">2</div>
+        <div class="step-name">Set Up</div>
+        <p class="step-desc">Teachers add classes; students join by department and academic year</p>
+      </div>
+      <div class="how-step reveal reveal-delay-2">
+        <div class="step-num">3</div>
+        <div class="step-name">Collaborate</div>
+        <p class="step-desc">Post assignments, submit work, track attendance and marks — all live</p>
+      </div>
+      <div class="how-step reveal reveal-delay-3">
+        <div class="step-num">4</div>
+        <div class="step-name">Grow</div>
+        <p class="step-desc">Use AI soft skill scores and resume feedback to improve career readiness</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- RESUME ANALYZER -->
+<section class="resume-section" id="resume">
+  <div class="section-wrap">
+    <div class="resume-inner reveal">
+      <div class="resume-left">
+        <div class="resume-tag">&nbsp; ATS Multi-Domain</div>
+        <div class="resume-title">Score Your Resume<br>Against Any <em>Job.</em></div>
+        <p class="resume-desc">
+          Our browser-based ATS Resume Analyzer matches your resume against any job description using a taxonomy of 600+ skills across 20+ domains — from Technology to Finance to Law.
+        </p>
+        <ul class="resume-bullets">
+          <li><span class="rb-dot"></span> Auto-detects your target domain from the job description</li>
+          <li><span class="rb-dot"></span> Shows matched, missing and extra skills with colour-coded badges</li>
+          <li><span class="rb-dot"></span> Composite ATS score: 70% skill match + 30% keyword match</li>
+          <li><span class="rb-dot"></span> Domain-specific tips — what ATS systems look for in your field</li>
+          <li><span class="rb-dot"></span> Downloadable report you can act on immediately</li>
+        </ul>
+        <a href="/student/login" class="resume-cta">
+          Analyse My Resume &nbsp; →
+        </a>
+      </div>
+      <div class="resume-right">
+        <div class="ats-card">
+          <div class="ats-card-head">
+            <span class="ats-label">ATS SCORE REPORT</span>
+            <div class="ats-score-badge">
+              <div class="ats-score-num">78</div>
+              <div class="ats-score-sub">/ 100</div>
+            </div>
+          </div>
+          <div class="ats-skills">
+            <div class="ats-skill-row">
+              <div class="ats-skill-head"><span class="ats-skill-name">Skill Match</span><span class="ats-skill-pct">84%</span></div>
+              <div class="ats-bar-bg"><div class="ats-bar-fill" style="width:84%;"></div></div>
+            </div>
+            <div class="ats-skill-row">
+              <div class="ats-skill-head"><span class="ats-skill-name">Keyword Match</span><span class="ats-skill-pct">58%</span></div>
+              <div class="ats-bar-bg"><div class="ats-bar-fill" style="width:58%;"></div></div>
+            </div>
+            <div class="ats-skill-row">
+              <div class="ats-skill-head"><span class="ats-skill-name">Domain</span><span class="ats-skill-pct">Technology</span></div>
+              <div class="ats-bar-bg"><div class="ats-bar-fill" style="width:100%;"></div></div>
+            </div>
+          </div>
+          <div class="ats-badges">
+            <span class="ats-badge ats-matched">✓ Python</span>
+            <span class="ats-badge ats-matched">✓ PostgreSQL</span>
+            <span class="ats-badge ats-matched">✓ REST API</span>
+            <span class="ats-badge ats-missing">✗ Docker</span>
+            <span class="ats-badge ats-missing">✗ AWS</span>
+            <span class="ats-badge ats-extra">+ Node.js</span>
+            <span class="ats-badge ats-extra">+ FastAPI</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="get-started">
+  <div class="section-wrap">
+    <div class="cta-inner reveal">
+      <div class="cta-eyebrow">Ready to Begin?</div>
+      <div class="cta-title">Join CampusMind <em>AI</em> Today</div>
+      <p class="cta-sub">Choose your role and create your free account in under 2 minutes.</p>
+      <div class="cta-btns">
+        <a href="/student/register" class="cta-btn cta-btn-student"> &nbsp; I'm a Student — Register</a>
+        <div class="cta-or">or</div>
+        <a href="/register" class="cta-btn cta-btn-teacher"> &nbsp; I'm a Teacher — Register</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">CampusMind <span>AI</span></div>
+  <div style="font-size:13px; color:var(--ink-light);">© 2025 CampusMind AI. Smart Education Platform.</div>
+  <div class="footer-links">
+    <a href="/login">Teacher Login</a>
+    <a href="/student/login">Student Login</a>
+  </div>
+</footer>
+
+<script>
+// ── Scroll reveal
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.12 });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+// ── Skill bar animation on enter
+const barObserver = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.querySelectorAll('.skill-bar-fill, .ats-bar-fill').forEach(bar => {
+        const w = bar.style.width;
+        bar.style.width = '0%';
+        requestAnimationFrame(() => {
+          setTimeout(() => { bar.style.width = w; }, 100);
+        });
+      });
+      barObserver.unobserve(e.target);
+    }
+  });
+}, { threshold: 0.3 });
+document.querySelectorAll('.ss-right, .ats-card').forEach(el => barObserver.observe(el));
+
+// ── Nav active state on scroll
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => {
+    if (window.scrollY >= s.offsetTop - 120) current = s.id;
+  });
+  navLinks.forEach(a => {
+    a.style.color = a.getAttribute('href') === '#' + current ? 'var(--ink)' : '';
+  });
+}, { passive: true });
+</script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Student Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            border-radius: 18px;
+            padding: 22px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .title {
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .item-card {
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+        }
+
+        .btn-logout {
+            background: #ef4444;
+            border: none;
+            border-radius: 10px;
+        }
+
+        .btn-logout:hover {
+            background: #dc2626;
+        }
+
+        p {
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container mt-5">
+
+    <!-- STUDENT INFO -->
+    <div class="glass-card mb-4">
+
+        <h2 class="title">
+            Welcome, <%= student?.full_name %>
+        </h2>
+
+        <p>Roll No: <%= student?.rollno %></p>
+        <p>Department: <%= student?.department %></p>
+        <p>Semester: <%= student?.semester %></p>
+
+    </div>
+
+    <!-- NOTIFICATIONS -->
+    <div class="glass-card mb-4">
+
+        <h4 class="title mb-3">Notifications</h4>
+
+        <% if (typeof notifications !== "undefined" && notifications && notifications.length > 0) { %>
+
+            <% notifications.forEach(n => { %>
+
+                <div class="item-card">
+                    <h5><%= n.title %></h5>
+                    <p><%= n.message %></p>
+                </div>
+
+            <% }) %>
+
+        <% } else { %>
+
+            <p>No notifications available</p>
+
+        <% } %>
+
+    </div>
+
+    <!-- ASSIGNMENTS -->
+    <div class="glass-card">
+
+        <h4 class="title mb-3">Assignments</h4>
+
+        <% if (typeof assignments !== "undefined" && assignments && assignments.length > 0) { %>
+
+            <% assignments.forEach(a => { %>
+
+                <div class="item-card">
+
+                    <h5><%= a.title %></h5>
+                    <p>Subject: <%= a.subject %></p>
+                    <p><%= a.description %></p>
+                    <p>Due: <%= a.due_date %></p>
+
+                </div>
+
+            <% }) %>
+
+        <% } else { %>
+
+            <p>No assignments uploaded</p>
+
+        <% } %>
+
+    </div>
+
+    <!-- LOGOUT -->
+    <div class="mt-4">
+        <a href="/student-logout" class="btn btn-logout text-white px-4 py-2">
+            Logout
+        </a>
+    </div>
+
+</div>
+
+</body>
+</html>

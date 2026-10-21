@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Soft Skill Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: linear-gradient(135deg, #f0f4ff, #ffffff); min-height: 100vh; font-family: 'Segoe UI', sans-serif; }
+
+        .top-bar {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white;
+            padding: 18px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            box-shadow: 0 4px 20px rgba(106,17,203,0.25);
+        }
+        .top-bar h3 { margin: 0; font-size: 22px; }
+        .top-bar p  { margin: 4px 0 0; opacity: 0.85; font-size: 14px; }
+        .top-bar-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .back-link { color: rgba(255,255,255,0.85); text-decoration: none; font-size: 14px; }
+        .back-link:hover { color: #fff; text-decoration: underline; }
+        .logout-btn {
+            background: white; color: #dc3545; border: none;
+            padding: 6px 18px; border-radius: 8px; font-weight: 700;
+            text-decoration: none; font-size: 14px;
+        }
+        .logout-btn:hover { background: #fff3f3; color: #dc3545; }
+
+        .content-area { padding: 28px 24px; max-width: 1200px; margin: 0 auto; }
+
+        /* Status banner */
+        .status-bar {
+            background: #f0fdf4;
+            border: 1.5px solid #86efac;
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+            color: #166534;
+        }
+        .status-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+            animation: pulse 1.5s infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulse {
+            0%,100% { opacity: 1; } 50% { opacity: 0.4; }
+        }
+        .status-bar.offline {
+            background: #fff7ed;
+            border-color: #fdba74;
+            color: #9a3412;
+        }
+        .status-bar.offline .status-dot { background: #f97316; animation: none; }
+
+        /* Upload card */
+        .upload-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 36px;
+            text-align: center;
+        }
+        .upload-card h4 { font-size: 20px; font-weight: 700; margin-bottom: 8px; color: #1e1b4b; }
+        .upload-card p.sub { color: #6b7280; font-size: 14px; margin-bottom: 28px; }
+
+        .drop-zone {
+            border: 2.5px dashed #a78bfa;
+            border-radius: 16px;
+            padding: 48px 24px;
+            background: #faf5ff;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .drop-zone:hover, .drop-zone.dragover {
+            background: #f3e8ff;
+            border-color: #7c3aed;
+        }
+        .drop-zone .big-icon { font-size: 52px; margin-bottom: 12px; }
+        .drop-zone h5 { font-size: 17px; font-weight: 600; color: #4c1d95; margin-bottom: 6px; }
+        .drop-zone p { color: #6b7280; font-size: 13px; margin: 0; }
+
+        #fileInput { display: none; }
+
+        .file-chip {
+            display: inline-flex; align-items: center; gap: 10px;
+            background: #ede9fe; border-radius: 24px;
+            padding: 8px 18px; font-size: 14px; color: #4c1d95;
+            margin-top: 16px;
+        }
+        .file-chip .remove {
+            cursor: pointer; color: #7c3aed; font-weight: 700; font-size: 16px;
+        }
+        .file-chip .remove:hover { color: #dc2626; }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white; border: none;
+            padding: 14px 48px; border-radius: 12px;
+            font-size: 16px; font-weight: 700;
+            margin-top: 24px; cursor: pointer;
+            transition: opacity 0.2s;
+            width: 100%; max-width: 320px;
+        }
+        .analyze-btn:hover { opacity: 0.9; }
+        .analyze-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Progress */
+        .progress-card {
+            background: white; border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 36px; display: none;
+        }
+        .progress-card h4 { font-size: 18px; font-weight: 700; color: #1e1b4b; margin-bottom: 6px; }
+        .step-label { color: #6b7280; font-size: 13px; margin-bottom: 16px; }
+        .progress { height: 10px; border-radius: 6px; background: #ede9fe; }
+        .progress-bar { background: linear-gradient(90deg, #6a11cb, #2575fc); border-radius: 6px; transition: width 0.4s; }
+
+        .steps-list { margin-top: 24px; }
+        .step-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; border-bottom: 1px solid #f3f4f6;
+            font-size: 14px; color: #374151;
+        }
+        .step-item:last-child { border-bottom: none; }
+        .step-icon { font-size: 18px; width: 24px; text-align: center; flex-shrink: 0; }
+        .step-done { color: #059669; }
+        .step-active { color: #7c3aed; font-weight: 600; }
+        .step-pending { color: #9ca3af; }
+
+        /* Results */
+        .results-card {
+            background: white; border-radius: 20px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+            padding: 36px; display: none;
+        }
+        .results-header {
+            display: flex; justify-content: space-between;
+            align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px;
+        }
+        .results-header h4 { font-size: 20px; font-weight: 700; color: #1e1b4b; margin: 0; }
+        .analyze-again-btn {
+            background: #ede9fe; color: #4c1d95; border: none;
+            padding: 8px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer;
+        }
+        .analyze-again-btn:hover { background: #ddd6fe; }
+
+        /* Score circles */
+        .scores-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 16px; margin-bottom: 28px; }
+        .score-circle {
+            text-align: center; padding: 20px 12px;
+            border-radius: 16px; background: #faf5ff;
+            border: 1.5px solid #ede9fe;
+        }
+        .score-number {
+            font-size: 32px; font-weight: 800;
+            line-height: 1; margin-bottom: 6px;
+        }
+        .score-label { font-size: 12px; color: #6b7280; font-weight: 500; }
+        .score-excellent { color: #059669; }
+        .score-good      { color: #2575fc; }
+        .score-average   { color: #f59e0b; }
+        .score-poor      { color: #ef4444; }
+
+        .overall-score {
+            background: linear-gradient(135deg, #6a11cb, #2575fc);
+            color: white; border-radius: 20px; padding: 28px;
+            text-align: center; margin-bottom: 24px;
+        }
+        .overall-score .big-num { font-size: 56px; font-weight: 900; line-height: 1; }
+        .overall-score .label { font-size: 16px; opacity: 0.85; margin-top: 6px; }
+
+        /* Section cards */
+        .section-card {
+            background: #f9fafb; border-radius: 14px;
+            padding: 20px; margin-bottom: 16px;
+        }
+        .section-card h5 { font-size: 15px; font-weight: 700; color: #1e1b4b; margin-bottom: 14px; }
+        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
+        .data-row:last-child { border-bottom: none; }
+        .data-key { color: #6b7280; }
+        .data-val { font-weight: 600; color: #111827; }
+
+        .feedback-box {
+            background: #f0fdf4; border-left: 4px solid #22c55e;
+            border-radius: 0 12px 12px 0; padding: 20px;
+            font-size: 14px; color: #166534; line-height: 1.8;
+            white-space: pre-wrap; margin-bottom: 16px;
+        }
+
+        .transcript-box {
+            background: #f8fafc; border: 1.5px solid #e2e8f0;
+            border-radius: 12px; padding: 18px;
+            font-size: 14px; color: #374151; line-height: 1.8;
+            max-height: 200px; overflow-y: auto;
+        }
+
+        @media (max-width: 600px) {
+            .content-area { padding: 16px 12px; }
+            .upload-card, .progress-card, .results-card { padding: 20px; }
+            .scores-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="top-bar">
+    <div>
+        <h3>Soft Skill Analyzer</h3>
+        <p>Welcome, <strong><%= student.full_name %></strong> — AI-powered communication analysis</p>
+    </div>
+    <div class="top-bar-right">
+        <a href="/student/dashboard" class="back-link">← Back to Dashboard</a>
+        <a href="/student/logout" class="logout-btn">Logout</a>
+    </div>
+</div>
+
+<div class="content-area">
+
+    <!-- STATUS BAR -->
+    <div class="status-bar" id="statusBar">
+        <div class="status-dot"></div>
+        <span id="statusText">Checking analyzer engine status...</span>
+    </div>
+
+    <!-- UPLOAD CARD -->
+    <div class="upload-card" id="uploadCard">
+        <h4>Upload Your Video for Analysis</h4>
+        <p class="sub">
+            Record yourself speaking — an interview, presentation, or introduction.<br>
+            Our AI will analyze your eye contact, vocabulary, fluency, grammar, confidence and more.
+        </p>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="big-icon"></div>
+            <h5>Drop your video here or click to browse</h5>
+            <p>MP4 · MOV · AVI · WebM · MKV — Max 200 MB</p>
+        </div>
+        <input type="file" id="fileInput" accept=".mp4,.mov,.avi,.webm,.mkv,video/*">
+
+        <div id="fileChip" style="display:none">
+            <div class="file-chip">
+                <span id="fileName"></span>
+                <span class="remove" onclick="clearFile()">✕</span>
+            </div>
+        </div>
+
+        <br>
+        <button class="analyze-btn" id="analyzeBtn" onclick="startAnalysis()" disabled>
+             Analyze My Video
+        </button>
+
+        <p style="margin-top:14px; font-size:12px; color:#9ca3af;">
+            Analysis takes 30–90 seconds depending on video length
+        </p>
+    </div>
+
+    <!-- PROGRESS CARD -->
+    <div class="progress-card" id="progressCard">
+        <h4>Analyzing your video...</h4>
+        <p class="step-label" id="stepLabel">Starting analysis pipeline...</p>
+        <div class="progress">
+            <div class="progress-bar" id="progressBar" style="width:0%"></div>
+        </div>
+        <div class="steps-list" id="stepsList"></div>
+    </div>
+
+    <!-- RESULTS CARD -->
+    <div class="results-card" id="resultsCard">
+        <div class="results-header">
+            <h4>Your Analysis Results</h4>
+            <button class="analyze-again-btn" onclick="analyzeAgain()">+ Analyze Another Video</button>
+        </div>
+        <div id="resultsContent"></div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ─── Config ─────────────────────────────────────────────
+const API_BASE = 'http://localhost:8000';
+
+const STEPS = [
+    { key: 'uploading',          label: 'Uploading video',                pct: 10 },
+    { key: 'extracting_audio',   label: 'Extracting audio track',         pct: 20 },
+    { key: 'transcribing',       label: 'Transcribing speech (Whisper)',   pct: 35 },
+    { key: 'analyzing_nlp',      label: 'Analyzing vocabulary & grammar',  pct: 55 },
+    { key: 'analyzing_audio',    label: 'Analyzing pitch & speaking rate', pct: 68 },
+    { key: 'analyzing_eye',      label: 'Detecting eye contact',           pct: 82 },
+    { key: 'scoring',            label: 'Computing scores',                pct: 90 },
+    { key: 'generating_feedback',label: 'Generating AI feedback',          pct: 97 },
+    { key: 'complete',           label: 'Analysis complete!',              pct: 100 }
+];
+
+// ─── State ──────────────────────────────────────────────
+let selectedFile = null;
+let sessionId    = null;
+let pollTimer    = null;
+let engineOnline = false;
+
+// ─── On load: check engine health ───────────────────────
+window.addEventListener('DOMContentLoaded', checkHealth);
+
+async function checkHealth() {
+    try {
+        const r = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(4000) });
+        const d = await r.json();
+        engineOnline = r.ok;
+        const bar = document.getElementById('statusBar');
+        const txt = document.getElementById('statusText');
+        if (engineOnline) {
+            bar.className = 'status-bar';
+            txt.textContent = 'Analyzer engine is online and ready';
+        } else {
+            bar.className = 'status-bar offline';
+            txt.textContent = 'Engine responding but not fully ready — try uploading anyway';
+        }
+    } catch {
+        document.getElementById('statusBar').className = 'status-bar offline';
+        document.getElementById('statusText').textContent =
+            'Analyzer engine offline — start backend-node (port 3001) and backend-python (port 8000) first';
+    }
+}
+
+// ─── File selection ──────────────────────────────────────
+document.getElementById('fileInput').addEventListener('change', e => {
+    const f = e.target.files[0];
+    if (f) selectFile(f);
+});
+
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover',  e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', ()  => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop',      e => {
+    e.preventDefault(); dropZone.classList.remove('dragover');
+    const f = e.dataTransfer.files[0];
+    if (f) selectFile(f);
+});
+
+function selectFile(f) {
+    const maxMB = 200;
+    if (f.size > maxMB * 1024 * 1024) {
+        alert(`File too large. Max size is ${maxMB} MB.`); return;
+    }
+    selectedFile = f;
+    document.getElementById('fileName').textContent = f.name;
+    document.getElementById('fileChip').style.display = 'block';
+    document.getElementById('analyzeBtn').disabled = false;
+}
+
+function clearFile() {
+    selectedFile = null;
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileChip').style.display = 'none';
+    document.getElementById('analyzeBtn').disabled = true;
+}
+
+// ─── Start analysis ──────────────────────────────────────
+async function startAnalysis() {
+    if (!selectedFile) return;
+
+    showCard('progress');
+    renderSteps(-1);
+
+    // Animate through steps while backend processes
+    let stepIdx = 0;
+    setProgress(STEPS[0].pct, STEPS[0].label);
+    renderSteps(0);
+
+    // Fake step animation so user sees progress (backend is synchronous)
+    const stepDelays = [0, 1500, 4000, 8000, 13000, 18000, 23000, 26000];
+    stepDelays.forEach((delay, i) => {
+        setTimeout(() => {
+            if (i < STEPS.length - 1) {
+                setProgress(STEPS[i].pct, STEPS[i].label);
+                renderSteps(i);
+            }
+        }, delay);
+    });
+
+    const form = new FormData();
+    form.append('video', selectedFile);
+
+    try {
+        // Single call — backend does everything and returns full result
+        const r = await fetch(`${API_BASE}/analyze`, { method: 'POST', body: form });
+        const d = await r.json();
+
+        if (!r.ok) throw new Error(d.detail || d.error || 'Analysis failed');
+
+        // Show complete step then display results
+        setProgress(100, 'Analysis complete!');
+        renderSteps(STEPS.length - 1);
+
+        setTimeout(() => showResults(d), 600);
+
+    } catch (err) {
+        showError('Analysis failed: ' + err.message + '\n\nMake sure both backend servers are running.');
+    }
+}
+
+// ─── Polling (not used — backend is synchronous) ─────────
+async function pollStatus() { /* no-op */ }
+
+async function fetchResult() { /* no-op */ }
+
+// ─── UI helpers ──────────────────────────────────────────
+function showCard(which) {
+    document.getElementById('uploadCard').style.display    = which === 'upload'   ? 'block' : 'none';
+    document.getElementById('progressCard').style.display  = which === 'progress' ? 'block' : 'none';
+    document.getElementById('resultsCard').style.display   = which === 'results'  ? 'block' : 'none';
+}
+
+function setProgress(pct, label) {
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.getElementById('stepLabel').textContent   = label;
+}
+
+function renderSteps(activeIdx) {
+    const list = document.getElementById('stepsList');
+    list.innerHTML = STEPS.map((s, i) => {
+        let cls = 'step-pending', icon = '○';
+        if (i < activeIdx)  { cls = 'step-done';   icon = '✅'; }
+        if (i === activeIdx){ cls = 'step-active';  icon = '⏳'; }
+        return `<div class="step-item ${cls}"><span class="step-icon">${icon}</span>${s.label}</div>`;
+    }).join('');
+}
+
+function showError(msg) {
+    showCard('upload');
+    alert(msg);
+}
+
+function analyzeAgain() {
+    clearFile();
+    sessionId = null;
+    showCard('upload');
+}
+
+// ─── Render results ──────────────────────────────────────
+function scoreClass(n) {
+    if (n >= 80) return 'score-excellent';
+    if (n >= 65) return 'score-good';
+    if (n >= 50) return 'score-average';
+    return 'score-poor';
+}
+
+function showResults(data) {
+    showCard('results');
+    const s  = data.scores     || {};
+    const nl = data.nlp        || {};
+    const au = data.audio      || {};
+    const ey = data.eye_contact|| {};
+    const tr = data.transcript || {};
+
+    const scoreNames = { grammar:'Grammar', vocabulary:'Vocabulary', confidence:'Confidence', eye_contact:'Eye Contact', fluency:'Fluency', filler_words:'Filler Words' };
+
+    const scoreCircles = Object.entries(scoreNames)
+        .filter(([k]) => s[k] !== undefined)
+        .map(([k, label]) => `
+            <div class="score-circle">
+                <div class="score-number ${scoreClass(s[k])}">${Math.round(s[k])}</div>
+                <div class="score-label">${label}</div>
+            </div>`).join('');
+
+    const fillerList = nl.filler_words
+        ? Object.entries(nl.filler_words).map(([w,c]) => `<em>"${w}"</em> ×${c}`).join(', ') || 'None detected'
+        : 'N/A';
+
+    document.getElementById('resultsContent').innerHTML = `
+        <div class="overall-score">
+            <div class="big-num">${Math.round(s.overall || 0)}<span style="font-size:28px;opacity:.7">/100</span></div>
+            <div class="label">Overall Soft Skill Score</div>
+        </div>
+
+        <div class="scores-grid">${scoreCircles}</div>
+
+        ${data.feedback ? `
+        <div class="section-card">
+            <h5>AI Feedback</h5>
+            <div class="feedback-box">${data.feedback}</div>
+        </div>` : ''}
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="section-card">
+                    <h5>Speech & Language</h5>
+                    <div class="data-row"><span class="data-key">Word count</span><span class="data-val">${tr.word_count ?? 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Unique words</span><span class="data-val">${nl.unique_words ?? 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Lexical diversity</span><span class="data-val">${nl.lexical_diversity !== undefined ? (nl.lexical_diversity * 100).toFixed(0) + '%' : 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Grammar errors</span><span class="data-val">${nl.grammar_errors ?? 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Filler words</span><span class="data-val">${nl.filler_count ?? 0} (${fillerList})</span></div>
+                    <div class="data-row"><span class="data-key">Filler rate/min</span><span class="data-val">${nl.filler_rate_per_min ?? 'N/A'}</span></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="section-card">
+                    <h5>Audio & Delivery</h5>
+                    <div class="data-row"><span class="data-key">Speaking rate</span><span class="data-val">${au.speaking_rate_wpm ?? 'N/A'} WPM</span></div>
+                    <div class="data-row"><span class="data-key">Avg pitch</span><span class="data-val">${au.avg_pitch_hz !== undefined ? au.avg_pitch_hz.toFixed(1) + ' Hz' : 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Pitch range</span><span class="data-val">${au.pitch_range_hz !== undefined ? au.pitch_range_hz.toFixed(1) + ' Hz' : 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Total pauses</span><span class="data-val">${au.pause_count ?? 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Long pauses</span><span class="data-val">${au.long_pauses ?? 'N/A'}</span></div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="section-card">
+                    <h5>Eye Contact</h5>
+                    <div class="data-row"><span class="data-key">On-camera time</span><span class="data-val">${ey.on_camera_pct !== undefined ? ey.on_camera_pct.toFixed(1) + '%' : 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Look-away events</span><span class="data-val">${ey.look_away_events ?? 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Avg look-away</span><span class="data-val">${ey.avg_look_away_duration_s !== undefined ? ey.avg_look_away_duration_s.toFixed(1) + ' s' : 'N/A'}</span></div>
+                    <div class="data-row"><span class="data-key">Frames analyzed</span><span class="data-val">${ey.frames_analyzed ?? 'N/A'}</span></div>
+                </div>
+            </div>
+            ${tr.text ? `
+            <div class="col-md-6">
+                <div class="section-card">
+                    <h5>Transcript</h5>
+                    <div class="transcript-box">${tr.text}</div>
+                    <small style="color:#9ca3af;margin-top:8px;display:block">Language: ${tr.language || 'N/A'}</small>
+                </div>
+            </div>` : ''}
+        </div>
+
+        <div style="margin-top:16px;text-align:center;color:#9ca3af;font-size:12px;">
+            Processing time: ${data.processing_time_s ? data.processing_time_s.toFixed(1) + 's' : 'N/A'}
+        </div>
+    `;
+}
+</script>
+</body>
+</html>

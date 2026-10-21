@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ATS Resume Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg,#f0f4ff,#ffffff); min-height:100vh; font-family:'Segoe UI',sans-serif; }
+
+        .header-box {
+            background: linear-gradient(135deg,#11998e,#38ef7d);
+            color:white; border-radius:20px; padding:25px 30px;
+            margin-bottom:30px;
+        }
+
+        .card-section { border-radius:16px; border:none; box-shadow:0 4px 20px rgba(0,0,0,0.08); margin-bottom:24px; }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed #a0aec0; border-radius:14px;
+            padding:40px 20px; text-align:center; cursor:pointer;
+            transition:0.3s; background:#f8faff;
+        }
+        .upload-area:hover, .upload-area.drag-over {
+            border-color:#11998e; background:#f0fdf4;
+        }
+        .upload-area .upload-icon { font-size:48px; margin-bottom:12px; }
+
+        /* Score Ring */
+        .score-ring-container { text-align:center; padding:20px; }
+        .score-circle {
+            width:140px; height:140px; border-radius:50%;
+            border:10px solid #e2e8f0; margin:0 auto 10px;
+            display:flex; align-items:center; justify-content:center;
+            flex-direction:column; position:relative;
+        }
+        .score-number { font-size:28px; font-weight:800; }
+        .score-label  { font-size:11px; color:#718096; }
+
+        /* Skill badges */
+        .skill-badge {
+            display:inline-block; padding:4px 12px; border-radius:20px;
+            font-size:12px; font-weight:600; margin:3px;
+        }
+        .skill-matched { background:#d1fae5; color:#065f46; }
+        .skill-missing { background:#fee2e2; color:#991b1b; }
+        .skill-extra   { background:#e0e7ff; color:#3730a3; }
+
+        /* Tab styling */
+        .nav-tabs .nav-link { color:#718096; font-weight:600; border-radius:10px 10px 0 0; }
+        .nav-tabs .nav-link.active { color:#11998e; border-bottom-color:#11998e; }
+
+        /* Suggestion items */
+        .suggestion-item {
+            background:#f0fdf4; border-left:4px solid #11998e;
+            border-radius:8px; padding:12px 16px; margin-bottom:10px;
+        }
+
+        /* Progress bar */
+        .score-bar { height:12px; border-radius:6px; }
+
+        /* Analyze button */
+        .btn-analyze {
+            background: linear-gradient(135deg,#11998e,#38ef7d);
+            color:white; border:none; border-radius:12px;
+            padding:14px 40px; font-size:16px; font-weight:700;
+            width:100%; cursor:pointer; transition:0.3s;
+        }
+        .btn-analyze:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(17,153,142,0.4); color:white; }
+        .btn-analyze:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+
+        /* Result cards */
+        .result-card { background:#fff; border-radius:14px; padding:20px; margin-bottom:16px; box-shadow:0 2px 10px rgba(0,0,0,0.06); }
+        .result-card h6 { color:#4a5568; font-size:12px; text-transform:uppercase; letter-spacing:1px; margin-bottom:8px; }
+
+        /* Loading spinner */
+        .analyzing-overlay { display:none; text-align:center; padding:40px; }
+        .spinner-ring {
+            width:60px; height:60px; border:6px solid #e2e8f0;
+            border-top-color:#11998e; border-radius:50%;
+            animation:spin 1s linear infinite; margin:0 auto 16px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+
+        /* Domain badge */
+        .domain-badge {
+            background:#e0fdf4; color:#065f46;
+            border-radius:20px; padding:4px 14px;
+            font-size:12px; font-weight:700;
+        }
+
+        textarea { resize:vertical; min-height:180px; }
+
+        .file-selected { background:#f0fdf4; border-color:#11998e !important; }
+        .file-selected .upload-icon { filter:grayscale(0); }
+    </style>
+</head>
+<body>
+
+<div class="container py-4">
+
+    <!-- HEADER -->
+    <div class="header-box d-flex justify-content-between align-items-center flex-wrap">
+        <div>
+            <h2 class="mb-0"> ATS Resume Analyzer</h2>
+            <p class="mb-0 opacity-75 mt-1">Multi-Domain Edition — Tech · Finance · HR · Marketing · Law & more</p>
+        </div>
+        <a href="/student/dashboard" class="btn btn-light text-success fw-bold mt-2 mt-md-0">← Back to Dashboard</a>
+    </div>
+
+    <div class="row">
+
+        <!-- LEFT COLUMN — INPUT -->
+        <div class="col-lg-5 mb-4">
+
+            <!-- UPLOAD CARD -->
+            <div class="card card-section p-4 mb-4">
+                <h5 class="mb-3">📄 Upload Resume</h5>
+
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('resumeFile').click()">
+                    <div class="upload-icon">📁</div>
+                    <p class="mb-1 fw-bold" id="uploadText">Click to browse or drag & drop</p>
+                    <p class="text-muted small mb-0">Supports PDF and DOCX files</p>
+                    <input type="file" id="resumeFile" accept=".pdf,.docx,.doc" style="display:none" onchange="handleFile(this)">
+                </div>
+
+                <div id="fileInfo" class="mt-3" style="display:none;">
+                    <div class="d-flex align-items-center gap-2 p-2 rounded" style="background:#f0fdf4;">
+                        <span id="fileIcon" style="font-size:24px;">📄</span>
+                        <div>
+                            <div class="fw-bold small" id="fileName"></div>
+                            <div class="text-muted" style="font-size:11px;" id="fileSize"></div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-danger ms-auto" onclick="clearFile()">✕</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JOB DESCRIPTION CARD -->
+            <div class="card card-section p-4 mb-4">
+                <h5 class="mb-3">Job Description</h5>
+                <textarea
+                    id="jobDescription"
+                    class="form-control"
+                    placeholder="Paste the full job description here...
+
+Example:
+We are looking for a Python Developer with experience in Django, REST APIs, PostgreSQL, and AWS. The candidate should have knowledge of Docker, Git, and Agile methodologies..."
+                    rows="8"
+                ></textarea>
+                <small class="text-muted mt-2 d-block"> Paste the complete job description for best results</small>
+            </div>
+
+            <!-- ANALYZE BUTTON -->
+            <button class="btn-analyze" id="analyzeBtn" onclick="analyzeResume()">
+                Analyze Resume
+            </button>
+
+            <div class="analyzing-overlay" id="analyzingOverlay">
+                <div class="spinner-ring"></div>
+                <p class="text-muted fw-bold">Analyzing your resume...</p>
+                <p class="text-muted small">Extracting skills, matching keywords, generating suggestions</p>
+            </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN — RESULTS -->
+        <div class="col-lg-7">
+
+            <!-- SCORE BANNER -->
+            <div class="card card-section p-4 mb-4" id="scoreBanner" style="display:none;">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <div class="score-circle" id="scoreCircle">
+                            <span class="score-number" id="scoreNumber">0%</span>
+                            <span class="score-label">ATS Score</span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="mb-2">
+                            <span class="domain-badge" id="domainBadge">—</span>
+                        </div>
+                        <h4 id="scoreBand" class="mb-2">—</h4>
+                        <div class="mb-1 small text-muted">Skill Match</div>
+                        <div class="progress mb-2" style="height:10px;">
+                            <div class="progress-bar bg-success" id="skillBar" style="width:0%"></div>
+                        </div>
+                        <div class="mb-1 small text-muted">Keyword Match</div>
+                        <div class="progress" style="height:10px;">
+                            <div class="progress-bar" style="background:#f59e0b;" id="kwBar" style="width:0%"></div>
+                        </div>
+                        <div class="mt-2 small text-muted" id="wordCounts"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLACEHOLDER (shown before analysis) -->
+            <div id="placeholder" class="card card-section p-5 text-center">
+                <div style="font-size:64px;"></div>
+                <h5 class="mt-3 text-muted">Your analysis results will appear here</h5>
+                <p class="text-muted small">Upload your resume, paste the job description, and click Analyze</p>
+            </div>
+
+            <!-- TABS RESULT -->
+            <div id="resultTabs" style="display:none;">
+                <ul class="nav nav-tabs mb-3" id="resultTabList">
+                    <li class="nav-item">
+                        <button class="nav-link active" onclick="showTab('matched')">✅ Matched (<span id="matchedCount">0</span>)</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" onclick="showTab('missing')">❌ Missing (<span id="missingCount">0</span>)</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" onclick="showTab('suggestions')">💡 Suggestions</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" onclick="showTab('report')">📋 Full Report</button>
+                    </li>
+                </ul>
+
+                <!-- MATCHED TAB -->
+                <div id="tab-matched" class="result-card">
+                    <h6>✅ Matched Skills</h6>
+                    <div id="matchedSkills"></div>
+                </div>
+
+                <!-- MISSING TAB -->
+                <div id="tab-missing" class="result-card" style="display:none;">
+                    <h6>❌ Missing Skills — Add These to Your Resume</h6>
+                    <div id="missingSkills"></div>
+                </div>
+
+                <!-- SUGGESTIONS TAB -->
+                <div id="tab-suggestions" class="result-card" style="display:none;">
+                    <h6>💡 Improvement Suggestions</h6>
+                    <div id="suggestionsContent"></div>
+                </div>
+
+                <!-- FULL REPORT TAB -->
+                <div id="tab-report" class="result-card" style="display:none;">
+                    <h6>📋 Full Analysis Report</h6>
+                    <div id="reportContent" style="font-family:monospace; font-size:13px; white-space:pre-wrap;"></div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+// ============================================================
+// SKILL TAXONOMY (600+ skills across 20 domains)
+// ============================================================
+const SKILL_TAXONOMY = new Set([
+    // Programming Languages
+    "python","java","javascript","typescript","c++","c#","ruby","go","rust","swift","kotlin",
+    "scala","r","matlab","perl","php","bash","dart","lua","haskell","cobol","vba","groovy",
+    // Web & Frontend
+    "html","css","react","angular","vue","svelte","nextjs","jquery","bootstrap","tailwind",
+    "sass","webpack","graphql","rest","api","json","xml","figma","wordpress","redux",
+    // Backend
+    "django","flask","fastapi","spring","express","nodejs","laravel","rails","asp.net","dotnet",
+    // Databases
+    "sql","mysql","postgresql","postgres","sqlite","mongodb","redis","elasticsearch","cassandra",
+    "oracle","dynamodb","firebase","nosql","snowflake","hive","neo4j","influxdb",
+    // Cloud & DevOps
+    "aws","azure","gcp","google cloud","docker","kubernetes","terraform","ansible","jenkins",
+    "github actions","ci/cd","linux","unix","nginx","apache","heroku","vercel","prometheus",
+    "grafana","datadog","splunk","kibana",
+    // Data Science & AI
+    "machine learning","deep learning","nlp","computer vision","ai","tensorflow","pytorch",
+    "keras","scikit-learn","sklearn","pandas","numpy","scipy","matplotlib","seaborn","plotly",
+    "tableau","power bi","data analysis","data science","data engineering","big data","spark",
+    "hadoop","kafka","airflow","etl","mlops","llm","langchain","openai","rag",
+    "feature engineering","statistical modeling","regression","classification","clustering",
+    // Tools
+    "git","github","gitlab","jira","confluence","notion","agile","scrum","kanban","devops",
+    "tdd","microservices","oop","android","ios","react native","flutter","cybersecurity",
+    "penetration testing","oauth","jwt","encryption","iot","arduino","raspberry pi",
+    // Finance
+    "financial analysis","financial modeling","financial reporting","valuation","dcf",
+    "equity research","investment banking","mergers and acquisitions","portfolio management",
+    "asset management","risk management","credit analysis","budgeting","forecasting",
+    "cost accounting","management accounting","ifrs","gaap","auditing","tax planning",
+    "gst","income tax","tds","bloomberg","sap fi","quickbooks","tally","derivatives",
+    "mutual funds","algorithmic trading","quantitative finance","kyc","aml","compliance",
+    // CA & Audit
+    "chartered accountant","ca","cpa","acca","cma","cfa","icai","statutory audit",
+    "internal audit","tax audit","due diligence","forensic accounting","gst return","itr filing",
+    // HR
+    "human resources","hr","talent acquisition","recruitment","sourcing","onboarding",
+    "hris","hrms","workday","payroll","epf","esic","performance management","kra","kpi","okr",
+    "learning and development","training","hr analytics","attrition","employee engagement",
+    "compensation and benefits","employer branding","hrbp","darwinbox","keka","greythr",
+    // Sales
+    "sales","business development","b2b","b2c","inside sales","key account management",
+    "crm","salesforce","hubspot","lead generation","cold calling","negotiation","upselling",
+    "cross-selling","customer retention","revenue generation","saas sales","presales",
+    // Marketing
+    "digital marketing","seo","sem","ppc","google ads","facebook ads","social media marketing",
+    "content marketing","email marketing","brand management","market research","seo writing",
+    "google analytics","marketing automation","mailchimp","copywriting","content writing",
+    "public relations","event management","graphic design","canva","photoshop","illustrator",
+    // Legal
+    "legal","corporate law","contract law","contract drafting","nda","intellectual property",
+    "trademark","patent","copyright","gdpr","data protection","litigation","arbitration",
+    "legal research","regulatory compliance","sebi","fema","companies act","ibc","rera",
+    // Operations
+    "operations management","supply chain","logistics","warehousing","inventory management",
+    "procurement","vendor management","demand planning","lean manufacturing","six sigma",
+    "kaizen","iso","quality assurance","quality control","erp","sap","sap mm","sap sd",
+    // Healthcare
+    "clinical research","clinical trials","gcp","pharmacovigilance","drug safety",
+    "regulatory affairs","fda","medical writing","nursing","patient care","ehr","emr","epic",
+    "biostatistics","public health","epidemiology","hospital administration",
+    // Education
+    "curriculum development","lesson planning","instructional design","e-learning","lms",
+    "teaching","tutoring","academic research","thesis","spss","qualitative research",
+    "quantitative research","academic writing","scientific writing",
+    // Design
+    "ui design","ux design","user research","usability testing","wireframing","prototyping",
+    "interaction design","design thinking","sketch","adobe xd","invision","miro",
+    "motion design","3d design","blender","autocad","revit","bim","interior design",
+    // Project Management
+    "project management","program management","pmp","prince2","safe","waterfall",
+    "stakeholder management","change management","business analysis","gap analysis",
+    "process mapping","root cause analysis","management consulting","business strategy",
+    "ms project","smartsheet","asana","trello","monday.com","clickup",
+    // Customer Service
+    "customer service","customer support","customer experience","customer success",
+    "complaint handling","zendesk","freshdesk","servicenow","nps","csat","sla management",
+    // Soft Skills
+    "communication","leadership","teamwork","problem solving","critical thinking",
+    "time management","collaboration","analytical thinking","presentation","mentoring",
+    "coaching","documentation","decision making","emotional intelligence","negotiation",
+    "strategic thinking","innovation","creativity","adaptability","attention to detail",
+    "multitasking","people management","public speaking","report writing"
+]);
+
+// Domain signals
+const DOMAIN_SIGNALS = {
+    "Technology / Engineering":     ["software engineer","developer","programmer","devops","cloud","backend","frontend","fullstack","data engineer"],
+    "Finance / Banking":            ["financial analyst","investment","portfolio","equity","banking","treasury","credit","wealth management"],
+    "Chartered Accountancy / Audit":["chartered accountant","audit","gst","statutory","tds","tally","income tax","ifrs","ind as"],
+    "Human Resources":              ["human resources","talent acquisition","hrbp","hr generalist","recruiter","payroll","hris","training"],
+    "Sales & Business Development": ["sales","business development","account executive","deal closing","crm","revenue","quota","client acquisition"],
+    "Marketing & Communications":   ["marketing","digital marketing","content","seo","brand","campaign","social media","pr","communications"],
+    "Legal / Law":                  ["lawyer","advocate","legal counsel","litigation","corporate law","compliance","contract","attorney"],
+    "Operations / Supply Chain":    ["operations","supply chain","logistics","procurement","warehouse","inventory","scm","vendor","erp"],
+    "Data Science / Analytics":     ["data scientist","machine learning","nlp","analytics","ai","model","tensorflow","pytorch","big data"],
+    "Healthcare / Clinical":        ["clinical","pharma","nursing","hospital","regulatory","pharmacovigilance","medical","patient care","ehr"],
+    "Design / UX":                  ["ux","ui","designer","figma","user research","wireframe","prototype","graphic","creative"],
+    "Project Management":           ["project manager","program manager","pmo","consultant","strategy","business analyst","agile","scrum","pmp"]
+};
+
+const DOMAIN_TIPS = {
+    "Technology / Engineering":     ["List your tech stack explicitly: language → framework → database → cloud → tools","Add GitHub link or portfolio URL — many ATS systems scan for these","Mention system scale: 'Built API serving 1M requests/day', 'Reduced latency by 40%'"],
+    "Finance / Banking":            ["Highlight quantified achievements: 'Managed a ₹500 Cr portfolio' or 'Reduced credit risk by 18%'","List tools: Bloomberg, Capital IQ, FactSet, Excel financial modeling, SAP FI/CO","Certifications such as CFA, FRM add strong credibility for finance roles"],
+    "Human Resources":              ["Quantify HR impact: 'Reduced attrition by 12%', 'Onboarded 300 employees in 2 quarters'","List HRMS tools: Workday, Darwinbox, Zoho People, GreytHR, Keka","Mention statutory knowledge: EPF, ESIC, Gratuity, POSH, Shops & Establishments Act"],
+    "Sales & Business Development": ["Lead with revenue numbers: 'Achieved 140% of ₹2 Cr quarterly quota'","Name CRM tools used: Salesforce, HubSpot, Zoho CRM, Pipedrive","Highlight industry verticals and deal sizes — ATS filters scan for these"],
+    "Marketing & Communications":   ["Quantify campaigns: 'Grew organic traffic by 60%', 'Generated 5000 MQLs in Q3'","List martech tools: Google Analytics, HubSpot, SEMrush, Ahrefs, Klaviyo","Separate Creative Skills from Analytics Skills — recruiters scan both sections"],
+    "Data Science / Analytics":     ["Show end-to-end project: data collection → modeling → deployment → impact","Mention model metrics: 'Achieved 94% accuracy on fraud detection model'","List both libraries (sklearn, PyTorch) and platforms (AWS SageMaker, Databricks)"],
+    "Legal / Law":                  ["Mention court levels, jurisdictions, and number of matters handled","List specific legislations: IBC, RERA, Companies Act, FEMA","Include database tools: Manupatra, SCC Online, Westlaw, LexisNexis"],
+    "Chartered Accountancy / Audit":["Mention articleship experience, clients handled, and specific forms filed (3CD, GSTR, ITR)","Quantify audit scope: 'Handled statutory audit for a ₹200 Cr turnover company'","List ICAI membership number and year of passing CA exams prominently"],
+    "Operations / Supply Chain":    ["Quantify: 'Reduced lead time by 20%', 'Saved ₹1.5 Cr in procurement costs'","Mention ERP modules: SAP MM/SD/PP/WM, Oracle SCM","Certifications like Six Sigma (Green/Black Belt), APICS CPIM add weight"]
+};
+
+// ============================================================
+// FILE HANDLING
+// ============================================================
+let resumeFile = null;
+let resumeText = '';
+
+const uploadArea = document.getElementById('uploadArea');
+uploadArea.addEventListener('dragover', e => { e.preventDefault(); uploadArea.classList.add('drag-over'); });
+uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('drag-over'));
+uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+});
+
+function handleFile(input) {
+    if (input.files[0]) processFile(input.files[0]);
+}
+
+function processFile(file) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf','docx','doc'].includes(ext)) {
+        alert('Please upload a PDF or DOCX file.');
+        return;
+    }
+    resumeFile = file;
+    document.getElementById('uploadText').textContent = file.name;
+    document.getElementById('uploadArea').classList.add('file-selected');
+    document.getElementById('fileName').textContent = file.name;
+    document.getElementById('fileSize').textContent = `${ext.toUpperCase()} • ${(file.size/1024).toFixed(1)} KB`;
+    document.getElementById('fileIcon').textContent = ext === 'pdf' ? '📄' : '📝';
+    document.getElementById('fileInfo').style.display = 'block';
+
+    // Read file text using FileReader
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        // For text extraction from PDF/DOCX in browser, we use the raw text
+        // PDF text will be extracted as much as possible
+        resumeText = e.target.result || '';
+    };
+    reader.readAsText(file, 'UTF-8');
+}
+
+function clearFile() {
+    resumeFile = null;
+    resumeText = '';
+    document.getElementById('resumeFile').value = '';
+    document.getElementById('uploadText').textContent = 'Click to browse or drag & drop';
+    document.getElementById('uploadArea').classList.remove('file-selected');
+    document.getElementById('fileInfo').style.display = 'none';
+}
+
+// ============================================================
+// CORE ANALYSIS FUNCTIONS
+// ============================================================
+
+function preprocessText(text) {
+    let t = text.toLowerCase()
+        .replace(/c\+\+/g,'cplusplus').replace(/c#/g,'csharp')
+        .replace(/\.net/g,'dotnet').replace(/ci\/cd/g,'cicd')
+        .replace(/node\.js/g,'nodejs').replace(/asp\.net/g,'aspnet')
+        .replace(/m&a/g,'mergers and acquisitions')
+        .replace(/l&d/g,'learning and development')
+        .replace(/b2b/g,'b2b').replace(/b2c/g,'b2c');
+    t = t.replace(/[^\w\s]/g,' ');
+    const stopwords = new Set(["i","me","my","we","our","you","your","he","she","it","its","they","their",
+        "what","which","who","this","that","these","those","am","is","are","was","were","be","been",
+        "being","have","has","had","do","does","did","will","would","shall","should","may","might",
+        "can","could","a","an","the","and","but","or","nor","for","so","yet","of","at","by","with",
+        "about","into","through","during","before","after","to","from","in","out","on","off","over",
+        "under","again","then","once","here","there","when","where","why","how","all","each","more",
+        "other","some","such","no","any","if","also","must","s","t","don","doesn","won","isn"]);
+    return t.split(/\s+/).filter(w => w.length > 1 && !stopwords.has(w));
+}
+
+function extractSkills(text) {
+    const textLower = text.toLowerCase()
+        .replace(/c\+\+/g,'c++').replace(/c#/g,'c#')
+        .replace(/\.net/g,'.net').replace(/node\.js/g,'nodejs');
+    const found = new Set();
+    SKILL_TAXONOMY.forEach(skill => {
+        const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+        const re = new RegExp('\\b' + escaped + '\\b','i');
+        if (re.test(textLower)) found.add(skill);
+    });
+    return found;
+}
+
+function detectDomain(text) {
+    const tLower = text.toLowerCase();
+    let best = 'General', bestCount = 0;
+    for (const [domain, signals] of Object.entries(DOMAIN_SIGNALS)) {
+        const count = signals.filter(s => tLower.includes(s)).length;
+        if (count > bestCount) { bestCount = count; best = domain; }
+    }
+    return best;
+}
+
+function computeScore(resumeSkills, jdSkills, resumeTokens, jdTokens) {
+    const matched = new Set([...resumeSkills].filter(s => jdSkills.has(s)));
+    const missing = new Set([...jdSkills].filter(s => !resumeSkills.has(s)));
+    const extra   = new Set([...resumeSkills].filter(s => !jdSkills.has(s)));
+
+    const skillScore = jdSkills.size > 0 ? (matched.size / jdSkills.size * 100) : 0;
+
+    const rt = new Set(resumeTokens), jt = new Set(jdTokens);
+    const common = [...rt].filter(t => jt.has(t)).length;
+    const kwScore = jt.size > 0 ? (common / jt.size * 100) : 0;
+
+    const composite = Math.round(0.70 * skillScore + 0.30 * kwScore * 10) / 10;
+
+    return {
+        ats_score: composite,
+        skill_score: Math.round(skillScore * 10) / 10,
+        keyword_score: Math.round(kwScore * 10) / 10,
+        matched_skills: [...matched].sort(),
+        missing_skills: [...missing].sort(),
+        extra_skills:   [...extra].sort(),
+        common_tokens:  common,
+        total_jd_tokens: jt.size
+    };
+}
+
+function generateSuggestions(result, domain, jdText, resumeText) {
+    const { ats_score, missing_skills } = result;
+    const suggestions = [];
+
+    // Score-based
+    if      (ats_score >= 80) suggestions.push(" Excellent match! Mirror the job description's exact phrasing in your bullet points to maximize ATS compatibility.");
+    else if (ats_score >= 60) suggestions.push(" Good match. A few targeted additions could push your score above 80%. Add the missing skills you genuinely possess.");
+    else if (ats_score >= 40) suggestions.push(" Moderate match. Use the job description's exact terminology throughout your resume for better ATS parsing.");
+    else                      suggestions.push(" Low match. Consider upskilling in the missing areas or targeting better-aligned roles.");
+
+    // Missing skills
+    if (missing_skills.length > 0) {
+        const top = missing_skills.slice(0, 10);
+        suggestions.push(`❌ Top Missing Skills: ${top.join(', ')}${missing_skills.length > 10 ? ` (and ${missing_skills.length - 10} more)` : ''}. Add these to your Skills section if you have experience with them.`);
+    } else {
+        suggestions.push("✅ You have covered all skills mentioned in the job description!");
+    }
+
+    // Quantifiable achievements
+    if (!/\d+%|\d+ (cr|lakh|million|billion|k|years|months)/i.test(resumeText)) {
+        suggestions.push(" Add Quantifiable Achievements. Example: 'Increased sales by 30%' or 'Reduced processing time by 40%' or 'Managed a team of 8 engineers'.");
+    }
+
+    // Headings check
+    const headings = ['experience','education','skills','projects'];
+    const missingHeadings = headings.filter(h => !resumeText.toLowerCase().includes(h));
+    if (missingHeadings.length > 0) {
+        suggestions.push(`Add clear section headings: ${missingHeadings.map(h => h.charAt(0).toUpperCase()+h.slice(1)).join(', ')}.`);
+    }
+
+    // ATS formatting
+    suggestions.push(" Formatting Tip: Use simple text formatting. Avoid tables, columns, and graphics — ATS systems may not parse them correctly.");
+    suggestions.push(" Use the exact keywords from the job description. ATS engines often match verbatim phrases.");
+    suggestions.push(" Keep your resume to 1-2 pages: Summary → Skills → Experience → Education → Projects.");
+
+    // Domain tips
+    const tips = DOMAIN_TIPS[domain] || [];
+    tips.forEach(tip => suggestions.push("🎯 " + tip));
+
+    return suggestions;
+}
+
+// ============================================================
+// MAIN ANALYZE FUNCTION
+// ============================================================
+
+function analyzeResume() {
+    const jdText = document.getElementById('jobDescription').value.trim();
+
+    if (!resumeFile) {
+        alert('Please upload your resume first.');
+        return;
+    }
+    if (!jdText) {
+        alert('Please paste the job description.');
+        return;
+    }
+    if (!resumeText || resumeText.trim().length < 50) {
+        // Try reading again as plain text
+        alert('Resume text could not be extracted properly. This analyzer works best with text-based PDFs. If your PDF is scanned/image-based, please use a DOCX file instead, or copy-paste your resume text into the job description field temporarily to test.');
+        return;
+    }
+
+    document.getElementById('analyzeBtn').disabled = true;
+    document.getElementById('analyzingOverlay').style.display = 'block';
+    document.getElementById('placeholder').style.display = 'none';
+    document.getElementById('scoreBanner').style.display = 'none';
+    document.getElementById('resultTabs').style.display = 'none';
+
+    // Small timeout to let UI update
+    setTimeout(() => {
+        try {
+            const domain = detectDomain(jdText);
+
+            const resumeTokens = preprocessText(resumeText);
+            const jdTokens     = preprocessText(jdText);
+            const resumeSkills = extractSkills(resumeText);
+            const jdSkills     = extractSkills(jdText);
+
+            const result = computeScore(resumeSkills, jdSkills, resumeTokens, jdTokens);
+            result.suggestions = generateSuggestions(result, domain, jdText, resumeText);
+
+            displayResults(result, domain, resumeText, jdText);
+
+        } catch(err) {
+            alert('Analysis error: ' + err.message);
+        }
+
+        document.getElementById('analyzeBtn').disabled = false;
+        document.getElementById('analyzingOverlay').style.display = 'none';
+
+    }, 800);
+}
+
+// ============================================================
+// DISPLAY RESULTS
+// ============================================================
+
+function displayResults(result, domain, resumeText, jdText) {
+    const score = result.ats_score;
+
+    // Score circle color
+    let color = '#ef4444'; // red
+    if (score >= 75) color = '#10b981';      // green
+    else if (score >= 50) color = '#f59e0b'; // amber
+
+    // Animate score circle
+    const circle = document.getElementById('scoreCircle');
+    circle.style.borderColor = color;
+    circle.style.borderTopColor = color;
+
+    document.getElementById('scoreNumber').textContent = score + '%';
+    document.getElementById('scoreNumber').style.color = color;
+
+    // Band
+    let band = '⚠️ Low Match';
+    if      (score >= 80) band = '🏆 Excellent Match!';
+    else if (score >= 60) band = '👍 Good Match';
+    else if (score >= 40) band = '🤔 Moderate Match';
+    document.getElementById('scoreBand').textContent = band;
+    document.getElementById('scoreBand').style.color = color;
+
+    document.getElementById('domainBadge').textContent = '🎯 ' + domain;
+    document.getElementById('skillBar').style.width = result.skill_score + '%';
+    document.getElementById('kwBar').style.width = result.keyword_score + '%';
+    document.getElementById('wordCounts').textContent =
+        `Skill match: ${result.skill_score}%  |  Keyword match: ${result.keyword_score}%  |  ` +
+        `Resume words: ${resumeText.split(/\s+/).length}  |  JD words: ${jdText.split(/\s+/).length}`;
+
+    // Counts
+    document.getElementById('matchedCount').textContent = result.matched_skills.length;
+    document.getElementById('missingCount').textContent = result.missing_skills.length;
+
+    // Matched skills
+    const matchedDiv = document.getElementById('matchedSkills');
+    if (result.matched_skills.length > 0) {
+        matchedDiv.innerHTML = result.matched_skills.map(s =>
+            `<span class="skill-badge skill-matched">✓ ${s}</span>`
+        ).join('');
+    } else {
+        matchedDiv.innerHTML = '<p class="text-muted">No taxonomy skills matched. Add a dedicated Skills section to your resume.</p>';
+    }
+
+    // Missing skills
+    const missingDiv = document.getElementById('missingSkills');
+    if (result.missing_skills.length > 0) {
+        missingDiv.innerHTML = result.missing_skills.map(s =>
+            `<span class="skill-badge skill-missing">✗ ${s}</span>`
+        ).join('');
+    } else {
+        missingDiv.innerHTML = '<p class="text-success fw-bold">🎯 None — you have covered all skills in the job description!</p>';
+    }
+
+    // Suggestions
+    const sugDiv = document.getElementById('suggestionsContent');
+    sugDiv.innerHTML = result.suggestions.map((s, i) =>
+        `<div class="suggestion-item"><strong>${i+1}.</strong> ${s}</div>`
+    ).join('');
+
+    // Full report
+    document.getElementById('reportContent').textContent =
+`══════════════════════════════════════════
+  ATS ANALYSIS REPORT — Multi-Domain Edition
+══════════════════════════════════════════
+
+  Detected Domain     : ${domain}
+  Composite ATS Score : ${result.ats_score}%
+  Skill Match Score   : ${result.skill_score}%
+  Keyword Match Score : ${result.keyword_score}%
+
+  Resume Words        : ${resumeText.split(/\s+/).length}
+  JD Words            : ${jdText.split(/\s+/).length}
+  JD Unique Tokens    : ${result.total_jd_tokens}
+  Common Tokens       : ${result.common_tokens}
+  Taxonomy Size       : ${SKILL_TAXONOMY.size} skills
+
+  Matched Skills (${result.matched_skills.length}):
+    ${result.matched_skills.join(', ') || 'none'}
+
+  Missing Skills (${result.missing_skills.length}):
+    ${result.missing_skills.join(', ') || 'none'}
+
+  Extra Skills in Resume (${result.extra_skills.length}):
+    ${result.extra_skills.join(', ') || 'none'}
+
+══════════════════════════════════════════`;
+
+    // Show results
+    document.getElementById('scoreBanner').style.display = 'block';
+    document.getElementById('resultTabs').style.display = 'block';
+    showTab('suggestions'); // default to suggestions tab
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+
+function showTab(tab) {
+    ['matched','missing','suggestions','report'].forEach(t => {
+        document.getElementById('tab-' + t).style.display = t === tab ? 'block' : 'none';
+    });
+    document.querySelectorAll('#resultTabList .nav-link').forEach((btn, i) => {
+        btn.classList.toggle('active', i === ['matched','missing','suggestions','report'].indexOf(tab));
+    });
+}
+</script>
+
+</body>
+</html>

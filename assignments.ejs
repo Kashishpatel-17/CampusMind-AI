@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Assignments</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background:#f4f6fb; }
+        .assignment-box { background:#eef5ff; padding:15px; margin-top:15px; border-radius:12px; border-left:4px solid #4facfe; }
+        .badge-dept { background:#e3f2fd; color:#1565c0; border-radius:20px; padding:4px 10px; font-size:12px; }
+        .badge-year { background:#e8f5e9; color:#2e7d32; border-radius:20px; padding:4px 10px; font-size:12px; }
+        .badge-diff { border-radius:20px; padding:4px 10px; font-size:12px; }
+        .submission-box { background:#fff8e1; padding:14px; margin-top:12px; border-radius:12px; border-left:4px solid #ffb300; }
+        .upload-zone {
+            border: 2px dashed #4facfe;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            background: #f0f8ff;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .upload-zone:hover { background: #dceeff; }
+        .upload-zone .upload-icon { font-size: 36px; margin-bottom: 8px; }
+        .file-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #e3f2fd; border-radius: 20px;
+            padding: 6px 14px; font-size: 13px; color: #1565c0;
+            margin-top: 10px;
+        }
+        .file-chip .remove-file { cursor: pointer; color: #e53935; font-weight: bold; }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+
+    <div class="mb-4">
+        <a href="/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+    </div>
+
+    <h2 class="mb-4">Assignments</h2>
+
+    <!-- CREATE ASSIGNMENT -->
+    <div class="card shadow p-4 mb-5" style="border-radius:16px;">
+        <h4 class="mb-4">Create New Assignment</h4>
+
+        <% if(teacherClasses && teacherClasses.length === 0){ %>
+            <div class="alert alert-warning">
+                ⚠️ You have no classes added. Please go to the <a href="/dashboard">Dashboard</a> and add your classes first.
+            </div>
+        <% } else { %>
+
+        <!-- IMPORTANT: enctype="multipart/form-data" required for file upload -->
+        <form action="/create-assignment" method="POST" enctype="multipart/form-data">
+
+            <!-- SELECT CLASS -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Select Class</label>
+                <select id="classSelect" class="form-select" required onchange="fillClassFields()">
+                    <option value="">-- Select Department / Year / Subject --</option>
+                    <% teacherClasses.forEach(cls => { %>
+                        <option
+                            value="<%= cls.department %>|<%= cls.year %>|<%= cls.subject %>"
+                            data-dept="<%= cls.department %>"
+                            data-year="<%= cls.year %>"
+                            data-subject="<%= cls.subject %>">
+                            <%= cls.department %> — Year: <%= cls.year %> — <%= cls.subject %>
+                        </option>
+                    <% }) %>
+                </select>
+            </div>
+
+            <!-- Hidden fields -->
+            <input type="hidden" name="department" id="dept_hidden">
+            <input type="hidden" name="year" id="year_hidden">
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Assignment Title</label>
+                    <input type="text" name="title" class="form-control" placeholder="Assignment Title" required>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Subject</label>
+                    <input type="text" name="subject" id="subjectField" class="form-control" placeholder="Auto-filled from class" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description</label>
+                <textarea name="description" class="form-control" rows="3" placeholder="Assignment Description" required></textarea>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Due Date</label>
+                    <input type="date" name="due_date" class="form-control" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Total Marks</label>
+                    <input type="number" name="total_marks" class="form-control" placeholder="Total Marks" required>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Difficulty</label>
+                    <select name="difficulty" class="form-select" required>
+                        <option value="">Select Difficulty</option>
+                        <option>Easy</option>
+                        <option>Medium</option>
+                        <option>Hard</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- FILE UPLOAD SECTION -->
+            <div class="mb-4">
+                <label class="form-label fw-bold">Attach Question File <span class="text-muted fw-normal">(Optional)</span></label>
+                <div class="upload-zone" id="uploadZone" onclick="document.getElementById('assignment_file').click()">
+                    <div class="upload-icon"></div>
+                    <p class="mb-1 fw-semibold">Click to upload assignment question file</p>
+                    <p class="text-muted small mb-0">Supports PDF, Word (.doc/.docx), Excel (.xls/.xlsx), Images (JPG, PNG, GIF) — Max 20MB</p>
+                </div>
+                <input type="file" name="assignment_file" id="assignment_file" class="d-none"
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"
+                    onchange="showFileName(this)">
+                <div id="fileChip" class="d-none">
+                    <span class="file-chip">
+                        <span id="selectedFileName"></span>
+                        <span class="remove-file" onclick="clearFile()">✕</span>
+                    </span>
+                </div>
+                <small class="text-muted d-block mt-2">This file will be shared with students along with the assignment notification.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary px-5">Create &amp; Notify Students</button>
+        </form>
+
+        <% } %>
+    </div>
+
+    <!-- STUDENT SUBMISSIONS RECEIVED -->
+    <% if(typeof submissions !== 'undefined' && submissions && submissions.length > 0){ %>
+    <div class="card shadow p-4 mb-5" style="border-radius:16px; border-top:4px solid #ffb300;">
+        <h4 class="mb-4">Student Submissions Received</h4>
+        <% submissions.forEach(sub => { %>
+            <div class="submission-box">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div>
+                        <h6 class="mb-1 fw-bold"><%= sub.student_name %> <span class="text-muted fw-normal">(Roll: <%= sub.rollno %>)</span></h6>
+                        <p class="mb-1 small"><strong>Assignment:</strong> <%= sub.assignment_title %> &nbsp;|&nbsp; <strong>Subject:</strong> <%= sub.subject %></p>
+                        <p class="mb-1 small"><strong>Class:</strong> <%= sub.department %> — <%= sub.year %></p>
+                        <small class="text-muted">Submitted: <%= new Date(sub.submitted_at).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) %></small>
+                    </div>
+                    <% if(sub.file_path){ %>
+                        <a href="<%= sub.file_path %>" download="<%= sub.file_name %>" class="btn btn-warning btn-sm">
+                            ⬇ Download <%= sub.file_name %>
+                        </a>
+                    <% } %>
+                </div>
+            </div>
+        <% }) %>
+    </div>
+    <% } %>
+
+    <!-- ASSIGNMENT LIST -->
+    <div class="card shadow p-4" style="border-radius:16px;">
+        <h4 class="mb-4">Your Assignments</h4>
+
+        <% if(assignments.length > 0){ %>
+            <% assignments.forEach(a => { %>
+                <div class="assignment-box">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <h5 class="mb-1"><%= a.title %></h5>
+                                <span class="badge-diff badge
+                                    <%= a.difficulty === 'Easy' ? 'bg-success' : a.difficulty === 'Medium' ? 'bg-warning text-dark' : 'bg-danger' %>">
+                                    <%= a.difficulty %>
+                                </span>
+                            </div>
+                            <div class="mb-2">
+                                <span class="badge-dept me-2"><%= a.department %></span>
+                                <span class="badge-year"><%= a.year %></span>
+                            </div>
+                            <p class="mb-1 text-muted"><strong>Subject:</strong> <%= a.subject %></p>
+                            <p class="mb-1 text-muted"><%= a.description %></p>
+                            <p class="mb-0 small">
+                                <strong>Due:</strong> <%= a.due_date %> &nbsp;|&nbsp;
+                                <strong>Total Marks:</strong> <%= a.total_marks %>
+                            </p>
+                        </div>
+                        <% if(a.file_path){ %>
+                            <div class="text-end">
+                                <a href="<%= a.file_path %>" download="<%= a.file_name %>"
+                                   class="btn btn-outline-primary btn-sm mt-1">
+                                     <%= a.file_name %>
+                                </a>
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            <% }) %>
+        <% } else { %>
+            <p class="text-muted">No assignments created yet.</p>
+        <% } %>
+    </div>
+
+</div>
+
+<script>
+function fillClassFields() {
+    const sel = document.getElementById('classSelect');
+    const opt = sel.options[sel.selectedIndex];
+    if (!opt || !opt.value) return;
+    document.getElementById('dept_hidden').value  = opt.getAttribute('data-dept');
+    document.getElementById('year_hidden').value  = opt.getAttribute('data-year');
+    document.getElementById('subjectField').value = opt.getAttribute('data-subject');
+}
+
+function showFileName(input) {
+    if (input.files && input.files[0]) {
+        document.getElementById('selectedFileName').textContent = input.files[0].name;
+        document.getElementById('fileChip').classList.remove('d-none');
+        document.getElementById('uploadZone').style.background = '#d4f1d4';
+        document.getElementById('uploadZone').querySelector('.upload-icon').textContent = '✅';
+    }
+}
+
+function clearFile() {
+    document.getElementById('assignment_file').value = '';
+    document.getElementById('fileChip').classList.add('d-none');
+    document.getElementById('uploadZone').style.background = '';
+    document.getElementById('uploadZone').querySelector('.upload-icon').textContent = '📄';
+}
+</script>
+
+</body>
+</html>

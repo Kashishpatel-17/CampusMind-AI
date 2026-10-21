@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg,#f0f4ff,#ffffff); min-height:100vh; }
+        .welcome-box { background: linear-gradient(135deg,#11998e,#38ef7d); color:white; border-radius:20px; padding:30px; }
+        .notif-item { border-left:4px solid #11998e; background:#f0fdf4; border-radius:8px; padding:12px 16px; margin-bottom:10px; }
+        .assign-card { border-left:4px solid #4facfe; background:#f0f8ff; border-radius:12px; padding:16px; margin-bottom:14px; }
+        .badge-dept { background:#e3f2fd; color:#1565c0; border-radius:20px; padding:4px 10px; font-size:12px; }
+        .badge-year { background:#e8f5e9; color:#2e7d32; border-radius:20px; padding:4px 10px; font-size:12px; }
+        .submit-zone {
+            border: 2px dashed #6c757d;
+            border-radius: 10px;
+            padding: 14px;
+            text-align: center;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+        .submit-zone:hover { background: #e9ecef; border-color: #4facfe; }
+        .submission-card { border-left: 4px solid #a78bfa; background: #f5f3ff; border-radius:12px; padding:14px; margin-bottom:12px; }
+        .modal-header { background: linear-gradient(135deg,#4facfe,#00f2fe); color:white; border-radius: 12px 12px 0 0; }
+        .modal-content { border-radius: 16px; border: none; }
+        .upload-icon-lg { font-size: 42px; }
+        .file-selected-chip {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: #d1fae5; border-radius: 20px;
+            padding: 6px 14px; font-size: 13px; color: #065f46; margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+<div class="container py-5">
+
+    <!-- SUCCESS TOAST -->
+    <% if(typeof query !== 'undefined' && query && query.submitted){ %>
+    <div class="alert alert-success alert-dismissible fade show shadow" role="alert">
+        Assignment submitted successfully! Your teacher has been notified.
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <% } %>
+
+    <!-- WELCOME -->
+    <div class="welcome-box mb-5 d-flex justify-content-between align-items-center flex-wrap shadow">
+        <div>
+            <h2>Welcome, <%= student.full_name %> 🎓</h2>
+            <p class="mb-0 opacity-75">
+                <strong>Department:</strong> <%= student.department %> &nbsp;|&nbsp;
+                <strong>Year:</strong> <%= student.year %> &nbsp;|&nbsp;
+                <strong>Roll No:</strong> <%= student.rollno %>
+            </p>
+        </div>
+        <a href="/student/logout" class="btn btn-light text-danger fw-bold mt-3 mt-md-0">Logout</a>
+    </div>
+
+    <div class="row">
+
+        <!-- NOTIFICATIONS COLUMN -->
+        <div class="col-md-4 mb-5">
+            <div class="card shadow p-4 h-100" style="border-radius:16px;">
+                <h4 class="mb-4">Notifications</h4>
+
+                <% if(notifications && notifications.length > 0){ %>
+                    <% notifications.forEach(notif => { %>
+                        <div class="notif-item">
+                            <strong><%= notif.title %></strong>
+                            <p class="mb-1 mt-1 small"><%= notif.message %></p>
+                            <small class="text-muted">
+                                <%= new Date(notif.created_at).toLocaleDateString('en-IN', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'}) %>
+                            </small>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-info mb-0">No new notifications.</div>
+                <% } %>
+            </div>
+        </div>
+
+        <!-- ASSIGNMENTS COLUMN -->
+        <div class="col-md-8 mb-5">
+            <div class="card shadow p-4" style="border-radius:16px;">
+                <h4 class="mb-4">My Assignments</h4>
+                <p class="text-muted small mb-4">
+                    Showing assignments for <strong><%= student.department %></strong> — <strong><%= student.year %></strong>
+                </p>
+
+                <% if(assignments && assignments.length > 0){ %>
+                    <% assignments.forEach(a => { %>
+                        <div class="assign-card">
+                            <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <h5 class="mb-1"><%= a.title %></h5>
+                                        <span class="badge
+                                            <%= a.difficulty === 'Easy' ? 'bg-success' :
+                                               a.difficulty === 'Medium' ? 'bg-warning text-dark' : 'bg-danger' %>">
+                                            <%= a.difficulty %>
+                                        </span>
+                                    </div>
+                                    <div class="mb-2">
+                                        <span class="badge-dept me-2"><%= a.department %></span>
+                                        <span class="badge-year"><%= a.year %></span>
+                                    </div>
+                                    <p class="mb-1 text-muted small">
+                                        <strong>Subject:</strong> <%= a.subject %> &nbsp;|&nbsp;
+                                        <strong>Teacher:</strong> <%= a.teacher_name %>
+                                    </p>
+                                    <p class="mb-1 small"><%= a.description %></p>
+                                    <p class="mb-2 small">
+                                        <strong>Due Date:</strong>
+                                        <span class="text-danger fw-bold"><%= new Date(a.due_date).toLocaleDateString('en-IN', {day:'numeric', month:'long', year:'numeric'}) %></span>
+                                        &nbsp;|&nbsp;
+                                        <strong>Total Marks:</strong> <%= a.total_marks %>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- DOWNLOAD + SUBMIT BUTTONS -->
+                            <div class="d-flex gap-2 flex-wrap mt-2">
+                                <% if(a.file_path){ %>
+                                    <a href="<%= a.file_path %>" download="<%= a.file_name %>"
+                                       class="btn btn-outline-primary btn-sm">
+                                        ⬇Download Question: <%= a.file_name %>
+                                    </a>
+                                <% } %>
+                                <button class="btn btn-success btn-sm"
+                                    onclick="openSubmitModal('<%= a.title %>', '<%= a.subject %>', '<%= a.teacher_name %>')">
+                                    Submit Assignment
+                                </button>
+                            </div>
+                        </div>
+                    <% }) %>
+                <% } else { %>
+                    <div class="alert alert-info mb-0">No assignments yet. Check back later.</div>
+                <% } %>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MY SUBMISSIONS -->
+    <% if(mySubmissions && mySubmissions.length > 0){ %>
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card shadow p-4" style="border-radius:16px;">
+                <h4 class="mb-4">My Submitted Assignments</h4>
+                <% mySubmissions.forEach(sub => { %>
+                    <div class="submission-card">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h6 class="mb-1 fw-bold"><%= sub.assignment_title %></h6>
+                                <p class="mb-1 small text-muted"><strong>Subject:</strong> <%= sub.subject %> &nbsp;|&nbsp; <strong>Submitted to:</strong> <%= sub.teacher_name %></p>
+                                <small class="text-muted"> <%= new Date(sub.submitted_at).toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'}) %></small>
+                            </div>
+                            <span class="badge bg-success">Submitted</span>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+    <% } %>
+
+    <!-- AI TOOLS SECTION -->
+    <div class="row mt-2 g-4">
+
+        <!-- RESUME ANALYZER CARD -->
+        <div class="col-md-6">
+            <div class="card shadow p-4 text-center h-100" style="border-radius:20px; background:linear-gradient(135deg,#667eea,#764ba2); color:white;">
+                <div style="font-size:48px; margin-bottom:12px;"></div>
+                <h4 class="mb-2">ATS Resume Analyzer</h4>
+                <p class="mb-3 opacity-75">
+                    Check how well your resume matches any job description.<br>
+                    Get matched skills, missing skills, and improvement suggestions instantly.
+                </p>
+                <a href="/student/resume-analyzer" class="btn btn-light fw-bold px-5 py-2" style="border-radius:12px; color:#667eea;">
+                    Open Resume Analyzer
+                </a>
+            </div>
+        </div>
+
+        <!-- SOFT SKILL ANALYZER CARD -->
+        <div class="col-md-6">
+            <div class="card shadow p-4 text-center h-100" style="border-radius:20px; background:linear-gradient(135deg,#6a11cb,#2575fc); color:white;">
+                <div style="font-size:48px; margin-bottom:12px;"></div>
+                <h4 class="mb-2">Soft Skill Analyzer</h4>
+                <p class="mb-3 opacity-75">
+                    Upload a video of your presentation or interview.<br>
+                    AI analyzes your eye contact, vocabulary, fluency, grammar &amp; confidence.
+                </p>
+                <a href="/student/softskill-analyzer" class="btn btn-light fw-bold px-5 py-2" style="border-radius:12px; color:#6a11cb;">
+                    Open Soft Skill Analyzer
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- SUBMIT ASSIGNMENT MODAL -->
+<div class="modal fade" id="submitModal" tabindex="-1" aria-labelledby="submitModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="submitModalLabel">Submit Assignment</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form action="/student/submit-assignment" method="POST" enctype="multipart/form-data" id="submitForm">
+                    <input type="hidden" name="assignment_title" id="modal_title">
+                    <input type="hidden" name="subject" id="modal_subject">
+
+                    <!-- ASSIGNMENT INFO -->
+                    <div class="alert alert-info py-2 px-3 mb-4 small">
+                        <strong>Assignment:</strong> <span id="modal_title_display"></span><br>
+                        <strong>Subject:</strong> <span id="modal_subject_display"></span>
+                    </div>
+
+                    <!-- SELECT TEACHER -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Select Teacher to Submit To</label>
+                        <select name="teacher_id" class="form-select" required>
+                            <option value="">-- Choose your subject teacher --</option>
+                            <% if(typeof teachers !== 'undefined' && teachers){ %>
+                                <% teachers.forEach(t => { %>
+                                    <option value="<%= t.id %>"><%= t.full_name %><%= t.subject ? ' — ' + t.subject : '' %><%= t.department ? ' (' + t.department + ')' : '' %></option>
+                                <% }) %>
+                            <% } %>
+                        </select>
+                        <small class="text-muted">Choose the teacher who assigned this work.</small>
+                    </div>
+
+                    <!-- FILE UPLOAD -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold"> Upload Your Completed Work</label>
+                        <div class="submit-zone" id="submitUploadZone" onclick="document.getElementById('submission_file').click()">
+                            <div class="upload-icon-lg"></div>
+                            <p class="mb-1 fw-semibold mt-2">Click to select your file</p>
+                            <p class="text-muted small mb-0">PDF, Word, Excel, or Image — Max 20MB</p>
+                        </div>
+                        <input type="file" name="submission_file" id="submission_file" class="d-none"
+                            accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.webp"
+                            onchange="showSubmissionFile(this)" required>
+                        <div id="submissionFileChip" class="d-none text-center">
+                            <span class="file-selected-chip">
+                                ✅ <span id="submissionFileName"></span>
+                                <span style="cursor:pointer;color:#b91c1c;font-weight:bold;" onclick="clearSubmissionFile()">✕</span>
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg fw-bold">
+                            Submit & Notify Teacher
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function openSubmitModal(title, subject, teacherName) {
+    document.getElementById('modal_title').value = title;
+    document.getElementById('modal_subject').value = subject;
+    document.getElementById('modal_title_display').textContent = title;
+    document.getElementById('modal_subject_display').textContent = subject;
+
+    // Pre-select teacher by name if possible
+    const sel = document.querySelector('select[name="teacher_id"]');
+    for (let opt of sel.options) {
+        if (opt.text.includes(teacherName)) {
+            opt.selected = true;
+            break;
+        }
+    }
+
+    new bootstrap.Modal(document.getElementById('submitModal')).show();
+}
+
+function showSubmissionFile(input) {
+    if (input.files && input.files[0]) {
+        document.getElementById('submissionFileName').textContent = input.files[0].name;
+        document.getElementById('submissionFileChip').classList.remove('d-none');
+        document.getElementById('submitUploadZone').style.background = '#d1fae5';
+        document.getElementById('submitUploadZone').style.borderColor = '#10b981';
+    }
+}
+
+function clearSubmissionFile() {
+    document.getElementById('submission_file').value = '';
+    document.getElementById('submissionFileChip').classList.add('d-none');
+    document.getElementById('submitUploadZone').style.background = '';
+    document.getElementById('submitUploadZone').style.borderColor = '';
+}
+
+// Show success alert if redirected with ?submitted=1
+const params = new URLSearchParams(window.location.search);
+if (params.get('submitted') === '1') {
+    window.history.replaceState({}, '', '/student/dashboard');
+}
+</script>
+</body>
+</html>
